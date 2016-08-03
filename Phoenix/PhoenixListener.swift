@@ -8,28 +8,46 @@
 
 import Foundation
 
-public protocol PhoenixListener: class {
- 
-    /*
-     /**
-     The `PhoenixDelegate` protocol describes the methods that `Phoenix` objects call on their delegates to handle events.
-     */
-     public protocol PhoenixDelegate: class {
+/// The `PhoenixListener` protocol describes methods of the `Phoenix`'s listeners.
+@objc public protocol PhoenixListener: class {
+    
+    /**
+     Called when `Phoenix` connected.
      
-     /**
-     Tells the delegate that `Phoenix` is connected.
-     
-     - parameter phoenix: The `Phoenix` object that dispatched the event.
+     - parameter phoenix: The `Phoenix` object that triggered the event.
      */
-     func phoenixDidConnect(phoenix: Phoenix)
+    optional func phoenixDidConnect(phoenix: Phoenix)
+    
+    /**
+     Called when `Phoenix` disconnected.
      
-     /**
-     Tells the delegate that `Phoenix` is disconnected.
+     - parameter phoenix: The `Phoenix` object that triggered the event.
+     - parameter error: An error object with the cause.
+     */
+    optional func phoenixDidDisconnect(phoenix: Phoenix, error: NSError?)
+
+    /**
+     Called when the channel joined.
      
-     - parameter phoenix: The `Phoenix` object that dispatched the event.
-     - parameter error: The error object, if it specified.
+     - parameter phoenix: The `Phoenix` object that triggered the event.
+     - parameter topic: The channel's topic.
      */
-     func phoenixDidDisconnect(phoenix: Phoenix, error: NSError?)
-     }
+    optional func phoenix(phoenix: Phoenix, didJoin topic: String)
+    
+    /**
+     Called when the channel closed.
+     
+     - parameter phoenix: The `Phoenix` object that triggered the event.
+     - parameter topic: The channel's topic.
+     - parameter error: An error object with the cause.
      */
+    optional func phoenix(phoenix: Phoenix, didClose topic: String, error: NSError?)
+
+    /**
+     Called when a message is received.
+     
+     - parameter phoenix: The `Phoenix` object that triggered the event.
+     - parameter message: The received message.
+     */
+    optional func phoenix(phoenix: Phoenix, didReceive message: PhoenixMessage)
 }

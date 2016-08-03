@@ -9,9 +9,9 @@
 import Foundation
 
 /**
- The `PhoenixMessage` struct defines a message dispatched through the `Phoenix`.
+ The `PhoenixMessage` class defines the messages dispatched through the `Phoenix`.
  */
-public struct PhoenixMessage: CustomStringConvertible {
+public class PhoenixMessage: NSObject {
     
     // MARK: - Properties
 
@@ -30,8 +30,44 @@ public struct PhoenixMessage: CustomStringConvertible {
     /// The JSON representation for sending via `Phoenix`.
     private(set) var json: String
     
+    /// The response message.
+    internal(set) public var response: PhoenixMessage? {
+        didSet {
+            
+            // Execute response handler in the background
+            NSOperationQueue().addOperationWithBlock {
+                
+                if self.response?.payload?["status"] as? String == "ok" {
+                    self.responseHandler?(message: self, error: nil)
+                } else {
+                    let errorReason = self.response?.payload?["response"]?["reason"] as? String
+                        ??
+                        self.response?.payload?["response"]?["error"] as? String
+                        ?? ""
+                    
+                    let errorDescription = "Sending a message failed because: \(errorReason)"
+                    
+                    let error = NSError(domain: "phoenix.message.error",
+                        code: 0,
+                        userInfo: [NSLocalizedFailureReasonErrorKey: errorReason,
+                                   NSLocalizedDescriptionKey: errorDescription])
+                    
+                    self.responseHandler?(message: self, error: error)
+                }
+            }
+        }
+    }
+    
+    /// The closure, which will be executed in the background after setting response.
+    var responseHandler: ((message: PhoenixMessage, error: NSError?) -> Void)?
+    
+    /// :nodoc:
+    public override var hash: Int {
+        return ref.hash
+    }
+    
     /// The description of the message.
-    public var description: String {
+    override public var description: String {
         return json
     }
     
@@ -72,7 +108,7 @@ public struct PhoenixMessage: CustomStringConvertible {
      
      - returns: The `PhoenixMessage` instance.
      */
-    init(json: String) {
+    convenience init(json: String) {
         let jsonData = json.dataUsingEncoding(NSUTF8StringEncoding)!
         let jsonObject = try! NSJSONSerialization.JSONObjectWithData(jsonData, options: [])
         
@@ -80,5 +116,16 @@ public struct PhoenixMessage: CustomStringConvertible {
                   event: jsonObject["event"] as! String,
                   payload: jsonObject["payload"] as? [String: AnyObject],
                   ref: jsonObject["ref"] as? String ?? NSUUID().UUIDString)
+    }
+    
+    // MARK: - Comparison
+    
+    /// :nodoc:
+    public override func isEqual(object: AnyObject?) -> Bool {
+        guard let object = object as? PhoenixMessage else {
+            return false
+        }
+        
+        return object.ref == ref
     }
 }

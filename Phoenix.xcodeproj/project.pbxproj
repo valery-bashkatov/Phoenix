@@ -10,10 +10,7 @@
 		8309109D1D45316D00217912 /* PhoenixMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8309109C1D45316D00217912 /* PhoenixMessage.swift */; };
 		838242221D4511F20087BFE5 /* Phoenix.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838242211D4511F20087BFE5 /* Phoenix.swift */; };
 		838242271D4513BD0087BFE5 /* Starscream.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 838242261D4513BD0087BFE5 /* Starscream.framework */; };
-		83C359591D4E76E200479E2C /* PhoenixChannelEventListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83C359551D4E76E200479E2C /* PhoenixChannelEventListener.swift */; };
 		83C3595A1D4E76E200479E2C /* PhoenixListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83C359561D4E76E200479E2C /* PhoenixListener.swift */; };
-		83C3595B1D4E76E200479E2C /* WeakPhoenixListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83C359571D4E76E200479E2C /* WeakPhoenixListener.swift */; };
-		83C3595C1D4E76E200479E2C /* PhoenixChannelListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83C359581D4E76E200479E2C /* PhoenixChannelListener.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -23,10 +20,7 @@
 		838242261D4513BD0087BFE5 /* Starscream.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Starscream.framework; path = Carthage/Build/iOS/Starscream.framework; sourceTree = "<group>"; };
 		83BF592A1D450FA500D2BC01 /* Phoenix.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Phoenix.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		83BF592F1D450FA500D2BC01 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		83C359551D4E76E200479E2C /* PhoenixChannelEventListener.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PhoenixChannelEventListener.swift; sourceTree = "<group>"; };
 		83C359561D4E76E200479E2C /* PhoenixListener.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PhoenixListener.swift; sourceTree = "<group>"; };
-		83C359571D4E76E200479E2C /* WeakPhoenixListener.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WeakPhoenixListener.swift; sourceTree = "<group>"; };
-		83C359581D4E76E200479E2C /* PhoenixChannelListener.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PhoenixChannelListener.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -74,9 +68,6 @@
 				838242211D4511F20087BFE5 /* Phoenix.swift */,
 				8309109C1D45316D00217912 /* PhoenixMessage.swift */,
 				83C359561D4E76E200479E2C /* PhoenixListener.swift */,
-				83C359571D4E76E200479E2C /* WeakPhoenixListener.swift */,
-				83C359581D4E76E200479E2C /* PhoenixChannelListener.swift */,
-				83C359551D4E76E200479E2C /* PhoenixChannelEventListener.swift */,
 			);
 			path = Phoenix;
 			sourceTree = "<group>";
@@ -178,12 +169,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				83C359591D4E76E200479E2C /* PhoenixChannelEventListener.swift in Sources */,
 				83C3595A1D4E76E200479E2C /* PhoenixListener.swift in Sources */,
 				838242221D4511F20087BFE5 /* Phoenix.swift in Sources */,
-				83C3595B1D4E76E200479E2C /* WeakPhoenixListener.swift in Sources */,
 				8309109D1D45316D00217912 /* PhoenixMessage.swift in Sources */,
-				83C3595C1D4E76E200479E2C /* PhoenixChannelListener.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
