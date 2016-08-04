@@ -89,7 +89,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
     /// The auto reconnection delay intervals (in seconds). The first try, second, third and so on.
     public var autoReconnectIntervals = [1.0, 2.0, 3.0, 4.0, 5.0]
     
-    /// An index of the current reconnection interval in the autoReconnectIntervals list.
+    /// An index of the current reconnection interval in the `autoReconnectIntervals` list.
     private var autoReconnectCurrentIntervalIndex = 0
 
     // MARK: - Initialization
@@ -134,9 +134,13 @@ public class Phoenix: NSObject, WebSocketDelegate {
     }
     
     /**
-     Disconnects `Phoenix`.
+     Disconnects `Phoenix`. If `autoReconnect` is true, it will be set to false.
      */
     public func disconnect() {
+        if autoReconnect {
+            autoReconnect = false
+        }
+        
         if isConnected {
             socket.disconnect()
             
@@ -296,12 +300,12 @@ public class Phoenix: NSObject, WebSocketDelegate {
         
         // Notify channel and event listeners
         channels[message.topic]?.eventListeners[message.event]?.forEach {
-            $0.listener?.phoenix?(self, didReceive: message)
+            $0.listener?.phoenix(self, didReceive: message)
         }
         
         // Notify channel listeners
         channels[message.topic]?.eventListeners["*"]?.forEach {
-            $0.listener?.phoenix?(self, didReceive: message)
+            $0.listener?.phoenix(self, didReceive: message)
         }
     }
     

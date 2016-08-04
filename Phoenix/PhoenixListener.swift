@@ -49,5 +49,5 @@ import Foundation
      - parameter phoenix: The `Phoenix` object that triggered the event.
      - parameter message: The received message.
      */
-    optional func phoenix(phoenix: Phoenix, didReceive message: PhoenixMessage)
+    func phoenix(phoenix: Phoenix, didReceive message: PhoenixMessage)
 }
