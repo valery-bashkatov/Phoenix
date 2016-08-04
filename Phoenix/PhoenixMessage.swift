@@ -68,7 +68,22 @@ public class PhoenixMessage: NSObject {
     
     /// The description of the message.
     override public var description: String {
-        return json
+        let jsonObject: [String: AnyObject] = [
+            "topic": topic,
+            "event": event,
+            "payload": payload ?? NSNull(),
+            "ref": ref,
+            "response": (response == nil ? nil : [
+                "topic": response!.topic,
+                "event": response!.event,
+                "payload": response!.payload ?? NSNull(),
+                "ref": response!.ref
+                ]) as [String: AnyObject]? ?? NSNull()
+        ]
+        
+        let jsonData = try! NSJSONSerialization.dataWithJSONObject(jsonObject, options: .PrettyPrinted)
+        
+        return String(data: jsonData, encoding: NSUTF8StringEncoding)!
     }
     
     // MARK: - Initialization
@@ -110,7 +125,7 @@ public class PhoenixMessage: NSObject {
      */
     convenience init(json: String) {
         let jsonData = json.dataUsingEncoding(NSUTF8StringEncoding)!
-        let jsonObject = try! NSJSONSerialization.JSONObjectWithData(jsonData, options: [])
+        let jsonObject = try! NSJSONSerialization.JSONObjectWithData(jsonData, options: []) as! [String: AnyObject]
         
         self.init(topic: jsonObject["topic"] as! String,
                   event: jsonObject["event"] as! String,
