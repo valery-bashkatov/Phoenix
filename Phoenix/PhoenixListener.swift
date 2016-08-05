@@ -12,6 +12,14 @@ import Foundation
 @objc public protocol PhoenixListener: class {
     
     /**
+     Called when a message is received.
+     
+     - parameter phoenix: The `Phoenix` object that triggered the event.
+     - parameter message: The received message.
+     */
+    func phoenix(phoenix: Phoenix, didReceive message: PhoenixMessage)
+    
+    /**
      Called when `Phoenix` connected.
      
      - parameter phoenix: The `Phoenix` object that triggered the event.
@@ -42,12 +50,4 @@ import Foundation
      - parameter error: An error object with the cause.
      */
     optional func phoenix(phoenix: Phoenix, didClose topic: String, error: NSError?)
-
-    /**
-     Called when a message is received.
-     
-     - parameter phoenix: The `Phoenix` object that triggered the event.
-     - parameter message: The received message.
-     */
-    func phoenix(phoenix: Phoenix, didReceive message: PhoenixMessage)
 }

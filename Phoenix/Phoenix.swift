@@ -72,11 +72,6 @@ public class Phoenix: NSObject, WebSocketDelegate {
     /// The queue of messages to send.
     private var sendingQueue = [PhoenixMessage]()
     
-    /// A Boolean value that indicates a connection status.
-    public var isConnected: Bool {
-        return socket.isConnected
-    }
-    
     /// The heartbeat timer.
     private var heartbeatTimer = NSTimer()
     
@@ -92,6 +87,14 @@ public class Phoenix: NSObject, WebSocketDelegate {
     /// An index of the current reconnection interval in the `autoReconnectIntervals` list.
     private var autoReconnectCurrentIntervalIndex = 0
 
+    /// The operation queue, which is used to call listeners' methods.
+    public var listenerQueue = NSOperationQueue()
+    
+    /// A Boolean value that indicates a connection status.
+    public var isConnected: Bool {
+        return socket.isConnected
+    }
+    
     // MARK: - Initialization
     
     /**
@@ -117,6 +120,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
         }
         
         socket = WebSocket(url: urlComponents.URL!)
+        socket.queue = dispatch_queue_create("org.bashkatov.valery.phoenix.starscream.queue", DISPATCH_QUEUE_CONCURRENT)
         
         super.init()
         socket.delegate = self
@@ -187,8 +191,12 @@ public class Phoenix: NSObject, WebSocketDelegate {
                 self.channels[message.topic]?.isJoined = nil
                 
                 // Notify channel listeners
-                self.channels[message.topic]?.eventListeners.flatMap {$1}.forEach {
-                    $0.listener?.phoenix?(self, didClose: message.topic, error: error)
+                self.listenerQueue.addOperationWithBlock {
+                    [unowned self] in
+                    
+                    self.channels[message.topic]?.eventListeners.flatMap {$1}.forEach {
+                        $0.listener?.phoenix?(self, didClose: message.topic, error: error)
+                    }
                 }
                 
                 return
@@ -198,8 +206,12 @@ public class Phoenix: NSObject, WebSocketDelegate {
             self.channels[message.topic]?.isJoined = true
             
             // Notify channel listeners
-            self.channels[message.topic]?.eventListeners.flatMap {$1}.forEach {
-                $0.listener?.phoenix?(self, didJoin: message.topic)
+            self.listenerQueue.addOperationWithBlock {
+                [unowned self] in
+                
+                self.channels[message.topic]?.eventListeners.flatMap {$1}.forEach {
+                    $0.listener?.phoenix?(self, didJoin: message.topic)
+                }
             }
             
             // Sending messages waiting channel join
@@ -289,8 +301,12 @@ public class Phoenix: NSObject, WebSocketDelegate {
                                 userInfo: [NSLocalizedFailureReasonErrorKey: errorReason,
                                            NSLocalizedDescriptionKey: errorDescription])
             
-            channels[message.topic]?.eventListeners.flatMap {$1}.forEach {
-                $0.listener?.phoenix?(self, didClose: message.topic, error: error)
+            listenerQueue.addOperationWithBlock {
+                [unowned self] in
+                
+                self.channels[message.topic]?.eventListeners.flatMap {$1}.forEach {
+                    $0.listener?.phoenix?(self, didClose: message.topic, error: error)
+                }
             }
             
             return
@@ -298,14 +314,17 @@ public class Phoenix: NSObject, WebSocketDelegate {
         
         // Received not response message
         
-        // Notify channel and event listeners
-        channels[message.topic]?.eventListeners[message.event]?.forEach {
-            $0.listener?.phoenix(self, didReceive: message)
-        }
-        
-        // Notify channel listeners
-        channels[message.topic]?.eventListeners["*"]?.forEach {
-            $0.listener?.phoenix(self, didReceive: message)
+        // Notify channel and event listeners, channel listeners
+        listenerQueue.addOperationWithBlock {
+            [unowned self] in
+            
+            self.channels[message.topic]?.eventListeners[message.event]?.forEach {
+                $0.listener?.phoenix(self, didReceive: message)
+            }
+            
+            self.channels[message.topic]?.eventListeners["*"]?.forEach {
+                $0.listener?.phoenix(self, didReceive: message)
+            }
         }
     }
     
@@ -364,8 +383,13 @@ public class Phoenix: NSObject, WebSocketDelegate {
     /// :nodoc:
     public func websocketDidConnect(socket: WebSocket) {
         
-        channels.flatMap {$1.eventListeners.flatMap {$1}}.forEach {
-            $0.listener?.phoenixDidConnect?(self)
+        // Notify listeners about connection
+        listenerQueue.addOperationWithBlock {
+            [unowned self] in
+            
+            self.channels.flatMap {$1.eventListeners.flatMap {$1}}.forEach {
+                $0.listener?.phoenixDidConnect?(self)
+            }
         }
         
         channels.forEach {join($0.0)}
@@ -390,8 +414,13 @@ public class Phoenix: NSObject, WebSocketDelegate {
         
         // Without auto reconnection just notify listeners about disconnection
         guard autoReconnect && autoReconnectCurrentIntervalIndex <= autoReconnectIntervals.count - 1 else {
-            channels.flatMap {$1.eventListeners.flatMap {$1}}.forEach {
-                $0.listener?.phoenixDidDisconnect?(self, error: error)
+            
+            listenerQueue.addOperationWithBlock {
+                [unowned self] in
+             
+                self.channels.flatMap {$1.eventListeners.flatMap {$1}}.forEach {
+                    $0.listener?.phoenixDidDisconnect?(self, error: error)
+                }
             }
             
             return
