@@ -10,7 +10,7 @@ import Foundation
 import Starscream
 
 /**
- The `Phoenix` class provides a convenient mechanism to communicate with the [Phoenix Framework Channels](http://www.phoenixframework.org/docs/channels).
+ The `Phoenix` class provides a convenient mechanism to communicate with [Phoenix Framework Channels](http://www.phoenixframework.org/docs/channels).
  
  - seealso: [Phoenix Framework Overview](http://www.phoenixframework.org/docs/overview)
  */
@@ -87,13 +87,17 @@ public class Phoenix: NSObject, WebSocketDelegate {
     /// An index of the current reconnection interval in the `autoReconnectIntervals` list.
     private var autoReconnectCurrentIntervalIndex = 0
 
-    /// The operation queue, which is used to call listeners' methods.
-    public var listenerQueue = NSOperationQueue()
-    
     /// A Boolean value that indicates a connection status.
     public var isConnected: Bool {
         return socket.isConnected
     }
+    
+    /// The operation queue, which is used to call listeners' methods.
+    private let queue = (starscream: dispatch_queue_create("phoenix.starscream", DISPATCH_QUEUE_CONCURRENT),
+                         message: dispatch_queue_create("phoenix.message", DISPATCH_QUEUE_CONCURRENT),
+                         channel: dispatch_queue_create("phoenix.channel", DISPATCH_QUEUE_CONCURRENT),
+                         listener: dispatch_queue_create("phoenix.listener", DISPATCH_QUEUE_CONCURRENT))
+    
     
     // MARK: - Initialization
     
@@ -120,9 +124,10 @@ public class Phoenix: NSObject, WebSocketDelegate {
         }
         
         socket = WebSocket(url: urlComponents.URL!)
-        socket.queue = dispatch_queue_create("org.bashkatov.valery.phoenix.starscream.queue", DISPATCH_QUEUE_CONCURRENT)
         
         super.init()
+        
+        socket.queue = queue.starscream
         socket.delegate = self
     }
     
@@ -148,8 +153,13 @@ public class Phoenix: NSObject, WebSocketDelegate {
         if isConnected {
             socket.disconnect()
             
-            channels = [:]
-            sendingQueue = []
+            dispatch_barrier_sync(queue.channel) {
+                self.channels = [:]
+            }
+            
+            dispatch_barrier_sync(queue.message) {
+                self.sendingQueue = []
+            }
         }
     }
     
@@ -158,69 +168,94 @@ public class Phoenix: NSObject, WebSocketDelegate {
     /**
      Joins the channel with specified topic.
      
-     - parameter topic: The channel's topic.
+     - parameter topic: The channel topic.
      */
     private func join(topic: String) {
+        var needSendJoinMessage = false
         
-        // Set channel info if not exist
-        if channels[topic] == nil {
-            channels[topic] = (isJoined: nil, eventListeners: [:])
+        // If channel is not yet joined and joining is not started
+        dispatch_barrier_sync(queue.channel) {
+            if self.channels[topic] == nil {
+                self.channels[topic] = (isJoined: nil, eventListeners: [:])
+            }
+            
+            // isJoined == nil means that joining the channel is not yet started
+            if self.isConnected && self.channels[topic]?.isJoined == nil {
+                
+                // isJoined == false means that joining started but not yet completed
+                self.channels[topic]?.isJoined = false
+                
+                // Need to send join message
+                needSendJoinMessage = true
+            }
         }
         
-        // If there is no connection, then exit. Joining will take place after the connection
-        guard isConnected else {
+        guard needSendJoinMessage else {
             return
         }
-        
-        // If isJoined != nil, then exit, because the joining is already in progress
-        guard channels[topic]?.isJoined == nil else {
-            return
-        }
-        
-        // Set status to false for change channel status to "Joining in progress"
-        channels[topic]?.isJoined = false
-        
-        // Send join message
+
+        // Send join message with special response handler
         let joinMessage = PhoenixMessage(topic: topic, event: Phoenix.joinEvent)
         
         send(joinMessage) {
             (message: PhoenixMessage, error: NSError?) in
+        
+            var needResendMessages = false
             
-            // Received error
-            guard error == nil else {
-                self.channels[message.topic]?.isJoined = nil
+            dispatch_barrier_sync(self.queue.channel) {
                 
-                // Notify channel listeners
-                self.listenerQueue.addOperationWithBlock {
-                    [unowned self] in
+                // Join failed
+                if error != nil {
                     
-                    self.channels[message.topic]?.eventListeners.flatMap {$1}.forEach {
-                        $0.listener?.phoenix?(self, didClose: message.topic, error: error)
+                    // Reset channel joining status
+                    self.channels[message.topic]?.isJoined = nil
+                    
+                    // Notify channel listeners about joining error
+                    let eventListeners = self.channels[message.topic]?.eventListeners.flatMap {$1}
+                    
+                    dispatch_async(self.queue.listener) {
+                        eventListeners?.forEach {
+                            $0.listener?.phoenix?(self, didClose: message.topic, error: error)
+                        }
                     }
+                    
+                // Successful joining
+                } else {
+                    
+                    // Set channel status to is joined
+                    self.channels[message.topic]?.isJoined = true
+                    
+                    // Notify channel listeners about successful joining
+                    let eventListeners = self.channels[message.topic]?.eventListeners.flatMap {$1}
+                    
+                    dispatch_async(self.queue.listener) {
+                        eventListeners?.forEach {
+                            $0.listener?.phoenix?(self, didJoin: message.topic)
+                        }
+                    }
+                    
+                    needResendMessages = true
                 }
-                
+            }
+            
+            guard needResendMessages else {
                 return
             }
             
-            // Received OK
-            self.channels[message.topic]?.isJoined = true
+            // Sending messages waiting channel join
+            var sendingQueue: [PhoenixMessage]!
             
-            // Notify channel listeners
-            self.listenerQueue.addOperationWithBlock {
-                [unowned self] in
-                
-                self.channels[message.topic]?.eventListeners.flatMap {$1}.forEach {
-                    $0.listener?.phoenix?(self, didJoin: message.topic)
-                }
+            dispatch_sync(self.queue.message) {
+                sendingQueue = self.sendingQueue
             }
             
-            // Sending messages waiting channel join
-            self.sendingQueue.forEach {
+            sendingQueue.forEach {
                 if $0.topic == message.topic {
                     self.send($0)
                 }
             }
         }
+        
     }
     
     // MARK: - Sending Messages
@@ -234,26 +269,27 @@ public class Phoenix: NSObject, WebSocketDelegate {
     public func send(message: PhoenixMessage,
                      responseHandler: ((message: PhoenixMessage, error: NSError?) -> Void)? = nil) {
         
+        // Join the channel (if needed)
         join(message.topic)
         
-        // Add message to queue if needed
-        if !sendingQueue.contains(message) {
-            message.responseHandler = responseHandler
-            sendingQueue.append(message)
+        // Add message to the queue if needed
+        dispatch_barrier_sync(queue.message) {
+            if !self.sendingQueue.contains(message) {
+                message.responseHandler = responseHandler
+                self.sendingQueue.append(message)
+            }
         }
         
-        // If Phoenix is not connected, then exit. Messages are sent after connecting
-        guard isConnected else {
-            return
+        var isChannelJoined = false
+        
+        dispatch_sync(queue.channel) {
+            isChannelJoined = self.channels[message.topic]?.isJoined ?? false
         }
         
-        // If message's channel is not joined or it is not channel join message, then exit
-        guard (channels[message.topic]?.isJoined ?? false) || message.event == Phoenix.joinEvent else {
-            return
+        // Send message if phoenix is connected, channel joined (or it's a join channel message) and message's response is empty
+        if isConnected && (isChannelJoined || message.event == Phoenix.joinEvent) && message.response == nil {
+            socket.writeString(message.json)
         }
-        
-        // Send data to the socket
-        socket.writeString(message.json)
     }
     
     // MARK: - Receiving Messages
@@ -265,65 +301,70 @@ public class Phoenix: NSObject, WebSocketDelegate {
      */
     private func receive(message: PhoenixMessage) {
         
-        // If recieved response message
-        guard message.event != Phoenix.replyEvent else {
-            let responseMessage = message
+        switch message.event {
             
-            guard let originalMessageIndex = sendingQueue.indexOf(responseMessage) else {
-                return
-            }
+        // Response message
+        case Phoenix.replyEvent:
             
-            let originalMessage = sendingQueue[originalMessageIndex]
-            
-            // Remove original message from the queue
-            sendingQueue.removeAtIndex(originalMessageIndex)
-            
-            // Set response of the original message
-            originalMessage.response = responseMessage
-            
-            return
-        }
-        
-        // Received error or close the channel message
-        guard message.event != Phoenix.closeEvent && message.event != Phoenix.errorEvent else {
-            channels[message.topic]?.isJoined = nil
-            
-            // Notify channel listeners
-            let errorReason = message.payload?["response"]?["reason"] as? String
-                ??
-                message.payload?["response"]?["error"] as? String
-                ?? ""
-            
-            let errorDescription = "Channel is closed by the server because: \(errorReason)"
-            
-            let error = NSError(domain: "phoenix.message.error",
-                                code: 0,
-                                userInfo: [NSLocalizedFailureReasonErrorKey: errorReason,
-                                           NSLocalizedDescriptionKey: errorDescription])
-            
-            listenerQueue.addOperationWithBlock {
-                [unowned self] in
+            dispatch_barrier_async(queue.message) {
+                let responseMessage = message
                 
-                self.channels[message.topic]?.eventListeners.flatMap {$1}.forEach {
-                    $0.listener?.phoenix?(self, didClose: message.topic, error: error)
+                // If the original message found
+                if let originalMessageIndex = self.sendingQueue.indexOf(responseMessage) {
+                    
+                    // Get original message
+                    let originalMessage = self.sendingQueue[originalMessageIndex]
+                    
+                    // Remove original message from the queue
+                    self.sendingQueue.removeAtIndex(originalMessageIndex)
+                    
+                    // Set response of the original message
+                    originalMessage.response = responseMessage
                 }
             }
             
-            return
-        }
-        
-        // Received not response message
-        
-        // Notify channel and event listeners, channel listeners
-        listenerQueue.addOperationWithBlock {
-            [unowned self] in
+        // Error or close channel message
+        case Phoenix.errorEvent, Phoenix.closeEvent:
             
-            self.channels[message.topic]?.eventListeners[message.event]?.forEach {
-                $0.listener?.phoenix(self, didReceive: message)
+            dispatch_barrier_async(queue.channel) {
+                self.channels[message.topic]?.isJoined = nil
+                
+                // Notify channel listeners
+                let errorReason = message.payload?["response"]?["reason"] as? String
+                    ??
+                    message.payload?["response"]?["error"] as? String
+                    ?? ""
+                
+                let errorDescription = "Channel is closed by the server because: \(errorReason)"
+                
+                let error = NSError(domain: "phoenix.message.error",
+                                    code: 0,
+                                    userInfo: [NSLocalizedFailureReasonErrorKey: errorReason,
+                                               NSLocalizedDescriptionKey: errorDescription])
+                
+                // Notify channel listeners about channel error or closing
+                let eventListeners = self.channels[message.topic]?.eventListeners.flatMap {$1}
+                
+                dispatch_async(self.queue.listener) {
+                    eventListeners?.forEach {
+                        $0.listener?.phoenix?(self, didClose: message.topic, error: error)
+                    }
+                }
             }
             
-            self.channels[message.topic]?.eventListeners["*"]?.forEach {
-                $0.listener?.phoenix(self, didReceive: message)
+        // Standard message
+        default:
+            
+            // Notify channel and event listeners, channel listeners
+            dispatch_async(queue.channel) {
+                let eventListeners = (self.channels[message.topic]?.eventListeners[message.event] ?? []) +
+                                     (self.channels[message.topic]?.eventListeners["*"] ?? [])
+                
+                dispatch_async(self.queue.listener) {
+                    eventListeners.forEach {
+                        $0.listener?.phoenix(self, didReceive: message)
+                    }
+                }
             }
         }
     }
@@ -334,37 +375,41 @@ public class Phoenix: NSObject, WebSocketDelegate {
      Adds a listener object for the specified channel topic and event.
      
      - parameter listener: The listener.
-     - parameter topic: The channel's topic.
+     - parameter topic: The channel topic.
      - parameter event: The event name.
      */
     public func addListener(listener: PhoenixListener, forChannel topic: String, event: String = "*") {
         
-        // Remove if already exist
+        // Remove the listener if it already exist
         removeListener(listener, forChannel: topic, event: event)
         
-        // Initiate channel
+        // Join the channel (if needed)
         join(topic)
         
-        if channels[topic]?.eventListeners[event] == nil {
-            channels[topic]?.eventListeners[event] = []
+        dispatch_barrier_sync(queue.channel) {
+            if self.channels[topic]?.eventListeners[event] == nil {
+                self.channels[topic]?.eventListeners[event] = []
+            }
+            
+            // Add listener as a weak reference
+            self.channels[topic]?.eventListeners[event]!.append(WeakPhoenixListener(listener: listener))
         }
-        
-        // Add listener object as a weak reference
-        channels[topic]?.eventListeners[event]!.append(WeakPhoenixListener(listener: listener))
     }
     
     /**
      Removes the listener object for the specified channel topic and event.
      
      - parameter listener: The listener.
-     - parameter topic: The channel's topic.
+     - parameter topic: The channel topic.
      - parameter event: The event name.
      */
     public func removeListener(listener: PhoenixListener, forChannel topic: String, event: String = "*") {
         
-        // Remove listener
-        if let eventListeners = channels[topic]?.eventListeners[event] {
-            channels[topic]?.eventListeners[event] = eventListeners.filter {$0.listener !== listener}
+        // Remove the listener
+        dispatch_barrier_sync(queue.channel) {
+            if let eventListeners = self.channels[topic]?.eventListeners[event] {
+                self.channels[topic]?.eventListeners[event] = eventListeners.filter {$0.listener !== listener}
+            }
         }
     }
     
@@ -383,13 +428,19 @@ public class Phoenix: NSObject, WebSocketDelegate {
     /// :nodoc:
     public func websocketDidConnect(socket: WebSocket) {
         
+        var channels: [String: (isJoined: Bool?, eventListeners: [String: [WeakPhoenixListener]])]!
+        
         // Notify listeners about connection
-        listenerQueue.addOperationWithBlock {
-            [unowned self] in
+        dispatch_sync(queue.channel) {
+            let eventListeners = self.channels.flatMap {$1.eventListeners.flatMap {$1}}
             
-            self.channels.flatMap {$1.eventListeners.flatMap {$1}}.forEach {
-                $0.listener?.phoenixDidConnect?(self)
+            dispatch_async(self.queue.listener) {
+                eventListeners.forEach {
+                    $0.listener?.phoenixDidConnect?(self)
+                }
             }
+            
+            channels = self.channels
         }
         
         channels.forEach {join($0.0)}
@@ -409,31 +460,37 @@ public class Phoenix: NSObject, WebSocketDelegate {
 
         heartbeatTimer.invalidate()
 
-        channels.forEach {channels[$0.0]?.isJoined = nil}
-        sendingQueue = sendingQueue.filter {$0.event != Phoenix.joinEvent}
-        
-        // Without auto reconnection just notify listeners about disconnection
-        guard autoReconnect && autoReconnectCurrentIntervalIndex <= autoReconnectIntervals.count - 1 else {
-            
-            listenerQueue.addOperationWithBlock {
-                [unowned self] in
-             
-                self.channels.flatMap {$1.eventListeners.flatMap {$1}}.forEach {
-                    $0.listener?.phoenixDidDisconnect?(self, error: error)
-                }
-            }
-            
-            return
+        dispatch_barrier_sync(queue.channel) {
+            self.channels.forEach {self.channels[$0.0]?.isJoined = nil}
+        }
+
+        dispatch_barrier_sync(queue.message) {
+            self.sendingQueue = self.sendingQueue.filter {$0.event != Phoenix.joinEvent}
         }
         
-        // Auto reconnect after delay interval
-        NSTimer.scheduledTimerWithTimeInterval(autoReconnectIntervals[autoReconnectCurrentIntervalIndex],
-                                               target: self,
-                                               selector: #selector(connect),
-                                               userInfo: nil,
-                                               repeats: false)
+        if autoReconnect && autoReconnectCurrentIntervalIndex <= autoReconnectIntervals.count - 1 {
         
-        autoReconnectCurrentIntervalIndex += 1
+            // Without auto reconnection just notify listeners about disconnection
+            dispatch_async(queue.channel) {
+                let eventListeners = self.channels.flatMap {$1.eventListeners.flatMap {$1}}
+                
+                dispatch_async(self.queue.listener) {
+                    eventListeners.forEach {
+                        $0.listener?.phoenixDidDisconnect?(self, error: error)
+                    }
+                }
+            }
+        } else {
+            
+            // Auto reconnect after delay interval
+            NSTimer.scheduledTimerWithTimeInterval(autoReconnectIntervals[autoReconnectCurrentIntervalIndex],
+                                                   target: self,
+                                                   selector: #selector(connect),
+                                                   userInfo: nil,
+                                                   repeats: false)
+            
+            autoReconnectCurrentIntervalIndex += 1
+        }
     }
     
     /// :nodoc:

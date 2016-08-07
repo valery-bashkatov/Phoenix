@@ -33,12 +33,15 @@ public class PhoenixMessage: NSObject {
     /// The response message.
     internal(set) public var response: PhoenixMessage? {
         didSet {
-            
+
             // Execute response handler in the background
-            NSOperationQueue().addOperationWithBlock {
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
                 
+                // Successful response
                 if self.response?.payload?["status"] as? String == "ok" {
                     self.responseHandler?(message: self, error: nil)
+                    
+                // Error response
                 } else {
                     let errorReason = self.response?.payload?["response"]?["reason"] as? String
                         ??
@@ -58,7 +61,7 @@ public class PhoenixMessage: NSObject {
         }
     }
     
-    /// The closure, which will be executed in the background after setting response.
+    /// The closure, which will be called after setting response. Handler executed in the background queue.
     var responseHandler: ((message: PhoenixMessage, error: NSError?) -> Void)?
     
     /// :nodoc:
