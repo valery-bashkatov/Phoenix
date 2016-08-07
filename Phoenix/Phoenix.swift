@@ -376,7 +376,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
      
      - parameter listener: The listener.
      - parameter topic: The channel topic.
-     - parameter event: The event name.
+     - parameter event: The event name. Asterisk for all channel events.
      */
     public func addListener(listener: PhoenixListener, forChannel topic: String, event: String = "*") {
         
@@ -401,7 +401,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
      
      - parameter listener: The listener.
      - parameter topic: The channel topic.
-     - parameter event: The event name.
+     - parameter event: The event name. Asterisk for all channel events.
      */
     public func removeListener(listener: PhoenixListener, forChannel topic: String, event: String = "*") {
         
