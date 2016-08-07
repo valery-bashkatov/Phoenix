@@ -4,7 +4,7 @@
 [![Platform](https://img.shields.io/badge/platform-ios-lightgrey.svg)]()
 
 ## Description
-TODO:
+The `Phoenix` class provides a convenient mechanism to communicate with [Phoenix Framework Channels](http://www.phoenixframework.org/docs/channels).
 
 ## Requirements
 - iOS 8.0+
@@ -28,5 +28,51 @@ And then follow the [instructions](https://github.com/Carthage/Carthage#if-youre
 ```swift
 import Phoenix
 
-TODO:
+class RadioController: NSObject, PhoenixListener {
+
+    var phoenix: Phoenix
+
+    override init() {
+        phoenix = Phoenix(url: NSURL(string: "ws://sample.com/websocket")!)
+        
+        super.init()
+
+        phoenix.connect()
+        phoenix.addListener(self, forChannel: "radio", event: "new_message")
+
+        let message = PhoenixMessage(topic: "radio", event: "ping")
+
+		phoenix.send(message) {
+			(message: PhoenixMessage, error: NSError?) in
+            
+    		guard error == nil else {
+    			print(error)
+    			return
+    		}
+
+	    	print(message)
+	    	print(message.response!.payload)
+		}
+    }
+    
+    func phoenix(phoenix: Phoenix, didReceive message: PhoenixMessage) {
+    	print("Received message: \(message)")
+    }
+    
+    func phoenix(phoenix: Phoenix, didJoin topic: String) {
+        print("Channel \(topic) joined")
+    }
+    
+    func phoenix(phoenix: Phoenix, didClose topic: String, error: NSError?) {
+        print("Channel \(topic) closed with error: \(error)")
+    }
+    
+    func phoenixDidConnect(phoenix: Phoenix) {
+        print("Phoenix connected")
+    }
+    
+    func phoenixDidDisconnect(phoenix: Phoenix, error: NSError?) {
+        print("Phoenix disconnected")
+    }
+}
 ```
