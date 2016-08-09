@@ -56,14 +56,19 @@ public class Phoenix: NSObject, WebSocketDelegate {
      [
        "system": (isJoined: true,
                   eventListeners: [
-                    ("change": [listener1, listener2],
-                    ("remove": [listener3])]),
+                    "change": [listener1, listener2],
+                    "remove": [listener3]
+                  ]
+                 ),
      
        "chat1": (isJoined: nil,
-                 eventListeners: [])
+                 eventListeners: [:])
      
        "chat2": (isJoined: false,
-                 eventListeners: [listener4])
+                 eventListeners: [
+                    "message": [listener4]
+                 ]
+                )
      ]
      ```
      */
@@ -376,10 +381,10 @@ public class Phoenix: NSObject, WebSocketDelegate {
      
      - parameter listener: The listener.
      - parameter topic: The channel topic.
-     - parameter event: The event name. Asterisk for all channel events.
+     - parameter event: The event name. If is `nil`, then all channel events.
      */
-    public func addListener(listener: PhoenixListener, forChannel topic: String, event: String = "*") {
-        
+    public func addListener(listener: PhoenixListener, forChannel topic: String, event: String? = nil) {
+
         // Remove the listener if it already exist
         removeListener(listener, forChannel: topic, event: event)
         
@@ -387,6 +392,10 @@ public class Phoenix: NSObject, WebSocketDelegate {
         join(topic)
         
         dispatch_barrier_sync(queue.channel) {
+            
+            // Asterisk is equal to all channel events
+            let event = event ?? "*"
+            
             if self.channels[topic]?.eventListeners[event] == nil {
                 self.channels[topic]?.eventListeners[event] = []
             }
@@ -401,14 +410,28 @@ public class Phoenix: NSObject, WebSocketDelegate {
      
      - parameter listener: The listener.
      - parameter topic: The channel topic.
-     - parameter event: The event name. Asterisk for all channel events.
+     - parameter event: The event name; `nil` means all channel events.
      */
-    public func removeListener(listener: PhoenixListener, forChannel topic: String, event: String = "*") {
+    public func removeListener(listener: PhoenixListener, forChannel topic: String, event: String? = nil) {
         
         // Remove the listener
         dispatch_barrier_sync(queue.channel) {
-            if let eventListeners = self.channels[topic]?.eventListeners[event] {
-                self.channels[topic]?.eventListeners[event] = eventListeners.filter {$0.listener !== listener}
+            
+            // If event == nil, then remove listener from all events
+            guard let event = event else {
+                
+                self.channels[topic]?.eventListeners.forEach {
+                    if let index = self.channels[topic]?.eventListeners[$0.0]?.indexOf({$0.listener === listener}) {
+                        self.channels[topic]?.eventListeners[$0.0]?.removeAtIndex(index)
+                    }
+                }
+                
+                return
+            }
+            
+            // Otherwise, from specified event
+            if let index = self.channels[topic]?.eventListeners[event]?.indexOf({$0.listener === listener}) {
+                self.channels[topic]?.eventListeners[event]?.removeAtIndex(index)
             }
         }
     }

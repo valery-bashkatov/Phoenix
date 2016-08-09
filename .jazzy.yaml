@@ -1,8 +1,9 @@
 output: Reference
-clean: true
+clean: false
 sdk: iphone
 author: Valery Bashkatov
 author_url: http://valery.bashkatov.org
+github_url: https://github.com/valery-bashkatov/Phoenix
 module: Phoenix
 readme: README.md
 min_acl: public
