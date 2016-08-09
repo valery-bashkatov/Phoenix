@@ -438,6 +438,9 @@ public class Phoenix: NSObject, WebSocketDelegate {
     
     // MARK: - Heartbeat
     
+    /**
+     Sends heartbeat message.
+     */
     @objc private func sendHeartbeat() {
         if isConnected {
             let heartbeatMessage = PhoenixMessage(topic: "phoenix", event: Phoenix.heartbeat)
@@ -468,12 +471,14 @@ public class Phoenix: NSObject, WebSocketDelegate {
         
         channels.forEach {join($0.0)}
         
-        heartbeatTimer.invalidate()
-        heartbeatTimer = NSTimer.scheduledTimerWithTimeInterval(heartbeatInterval,
-                                                                target: self,
-                                                                selector: #selector(sendHeartbeat),
-                                                                userInfo: nil,
-                                                                repeats: true)
+        dispatch_async(dispatch_get_main_queue()) {
+            self.heartbeatTimer.invalidate()
+            self.heartbeatTimer = NSTimer.scheduledTimerWithTimeInterval(self.heartbeatInterval,
+                                                                         target: self,
+                                                                         selector: #selector(self.sendHeartbeat),
+                                                                         userInfo: nil,
+                                                                         repeats: true)
+        }
         
         autoReconnectCurrentIntervalIndex = 0
     }
@@ -481,7 +486,9 @@ public class Phoenix: NSObject, WebSocketDelegate {
     /// :nodoc:
     public func websocketDidDisconnect(socket: WebSocket, error: NSError?) {
 
-        heartbeatTimer.invalidate()
+        dispatch_async(dispatch_get_main_queue()) {
+            self.heartbeatTimer.invalidate()
+        }
 
         dispatch_barrier_sync(queue.channel) {
             self.channels.forEach {self.channels[$0.0]?.isJoined = nil}
@@ -492,7 +499,19 @@ public class Phoenix: NSObject, WebSocketDelegate {
         }
         
         if autoReconnect && autoReconnectCurrentIntervalIndex <= autoReconnectIntervals.count - 1 {
-        
+
+            // Auto reconnect after delay interval
+            dispatch_async(dispatch_get_main_queue()) {
+                NSTimer.scheduledTimerWithTimeInterval(self.autoReconnectIntervals[self.autoReconnectCurrentIntervalIndex],
+                                                       target: self,
+                                                       selector: #selector(self.connect),
+                                                       userInfo: nil,
+                                                       repeats: false)
+                
+                self.autoReconnectCurrentIntervalIndex += 1
+            }
+        } else {
+            
             // Without auto reconnection just notify listeners about disconnection
             dispatch_async(queue.channel) {
                 let eventListeners = self.channels.flatMap {$1.eventListeners.flatMap {$1}}
@@ -503,16 +522,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
                     }
                 }
             }
-        } else {
             
-            // Auto reconnect after delay interval
-            NSTimer.scheduledTimerWithTimeInterval(autoReconnectIntervals[autoReconnectCurrentIntervalIndex],
-                                                   target: self,
-                                                   selector: #selector(connect),
-                                                   userInfo: nil,
-                                                   repeats: false)
-            
-            autoReconnectCurrentIntervalIndex += 1
         }
     }
     
