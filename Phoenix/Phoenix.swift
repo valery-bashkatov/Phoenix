@@ -272,7 +272,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
      - parameter responseHandler: The closure, which is called after message sending and receiving a response from the server. It will be executed in the background queue.
      */
     public func send(message: PhoenixMessage,
-                     responseHandler: ((message: PhoenixMessage, error: NSError?) -> Void)? = nil) {
+                     responseHandler: ((response: PhoenixMessage, error: NSError?) -> Void)? = nil) {
         
         // Join the channel (if needed)
         join(message.topic)

@@ -31,21 +31,24 @@ public class PhoenixMessage: NSObject {
     private(set) var json: String
     
     /// The response message.
-    internal(set) public var response: PhoenixMessage? {
-        didSet {
-
+    var response: PhoenixMessage? {
+        willSet {
+            guard let newValue = newValue else {
+                return
+            }
+            
             // Execute response handler in the background
             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
                 
                 // Successful response
-                if self.response?.payload?["status"] as? String == "ok" {
-                    self.responseHandler?(message: self, error: nil)
+                if newValue.payload?["status"] as? String == "ok" {
+                    self.responseHandler?(response: newValue, error: nil)
                     
                 // Error response
                 } else {
-                    let errorReason = self.response?.payload?["response"]?["reason"] as? String
+                    let errorReason = newValue.payload?["response"]?["reason"] as? String
                         ??
-                        self.response?.payload?["response"]?["error"] as? String
+                        newValue.payload?["response"]?["error"] as? String
                         ?? ""
                     
                     let errorDescription = "Sending a message failed because: \(errorReason)"
@@ -55,14 +58,14 @@ public class PhoenixMessage: NSObject {
                         userInfo: [NSLocalizedFailureReasonErrorKey: errorReason,
                                    NSLocalizedDescriptionKey: errorDescription])
                     
-                    self.responseHandler?(message: self, error: error)
+                    self.responseHandler?(response: newValue, error: error)
                 }
             }
         }
     }
     
     /// The closure, which will be called after setting response. Handler executed in the background queue.
-    var responseHandler: ((message: PhoenixMessage, error: NSError?) -> Void)?
+    var responseHandler: ((response: PhoenixMessage, error: NSError?) -> Void)?
     
     /// :nodoc:
     public override var hash: Int {
@@ -71,22 +74,7 @@ public class PhoenixMessage: NSObject {
     
     /// The description of the message.
     override public var description: String {
-        let jsonObject: [String: AnyObject] = [
-            "topic": topic,
-            "event": event,
-            "payload": payload ?? NSNull(),
-            "ref": ref,
-            "response": (response == nil ? nil : [
-                "topic": response!.topic,
-                "event": response!.event,
-                "payload": response!.payload ?? NSNull(),
-                "ref": response!.ref
-                ]) as [String: AnyObject]? ?? NSNull()
-        ]
-        
-        let jsonData = try! NSJSONSerialization.dataWithJSONObject(jsonObject, options: .PrettyPrinted)
-        
-        return String(data: jsonData, encoding: NSUTF8StringEncoding)!
+        return json
     }
     
     // MARK: - Initialization
