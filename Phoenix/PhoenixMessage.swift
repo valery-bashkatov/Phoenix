@@ -29,44 +29,7 @@ public class PhoenixMessage: NSObject {
     
     /// The JSON representation for sending via `Phoenix`.
     private(set) var json: String
-    
-    /// The response message.
-    var response: PhoenixMessage? {
-        willSet {
-            guard let newValue = newValue else {
-                return
-            }
-            
-            // Execute response handler in the background
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
-                
-                // Successful response
-                if newValue.payload?["status"] as? String == "ok" {
-                    self.responseHandler?(response: newValue, error: nil)
-                    
-                // Error response
-                } else {
-                    let errorReason = newValue.payload?["response"]?["reason"] as? String
-                        ??
-                        newValue.payload?["response"]?["error"] as? String
-                        ?? ""
-                    
-                    let errorDescription = "Sending a message failed because: \(errorReason)"
-                    
-                    let error = NSError(domain: "phoenix.message.error",
-                        code: 0,
-                        userInfo: [NSLocalizedFailureReasonErrorKey: errorReason,
-                                   NSLocalizedDescriptionKey: errorDescription])
-                    
-                    self.responseHandler?(response: newValue, error: error)
-                }
-            }
-        }
-    }
-    
-    /// The closure, which will be called after setting response. Handler executed in the background queue.
-    var responseHandler: ((response: PhoenixMessage, error: NSError?) -> Void)?
-    
+        
     /// :nodoc:
     public override var hash: Int {
         return ref.hash

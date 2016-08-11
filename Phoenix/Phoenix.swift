@@ -72,10 +72,11 @@ public class Phoenix: NSObject, WebSocketDelegate {
      ]
      ```
      */
-    private var channels = [String: (isJoined: Bool?, eventListeners: [String: [WeakPhoenixListener]])]()
+    private var channels: [String: (isJoined: Bool?, eventListeners: [String: [WeakPhoenixListener]])] = [:]
     
     /// The queue of messages to send.
-    private var sendingQueue = [PhoenixMessage]()
+    private var sendingQueue: [(message: PhoenixMessage,
+                                responseHandler: ((response: PhoenixMessage, error: NSError?) -> Void)?)] = []
     
     /// The heartbeat timer.
     private var heartbeatTimer = NSTimer()
@@ -248,15 +249,16 @@ public class Phoenix: NSObject, WebSocketDelegate {
             }
             
             // Sending messages waiting channel join
-            var sendingQueue: [PhoenixMessage]!
+            var sendingQueue: [(message: PhoenixMessage,
+                                responseHandler: ((response: PhoenixMessage, error: NSError?) -> Void)?)]!
             
             dispatch_sync(self.queue.message) {
                 sendingQueue = self.sendingQueue
             }
             
             sendingQueue.forEach {
-                if $0.topic == message.topic {
-                    self.send($0)
+                if $0.message.topic == message.topic {
+                    self.send($0.message)
                 }
             }
         }
@@ -279,9 +281,8 @@ public class Phoenix: NSObject, WebSocketDelegate {
         
         // Add message to the queue if needed
         dispatch_barrier_sync(queue.message) {
-            if !self.sendingQueue.contains(message) {
-                message.responseHandler = responseHandler
-                self.sendingQueue.append(message)
+            if !self.sendingQueue.contains({$0.message.isEqual(message)}) {
+                self.sendingQueue.append((message: message, responseHandler: responseHandler))
             }
         }
         
@@ -292,7 +293,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
         }
         
         // Send message if phoenix is connected, channel joined (or it's a join channel message) and message's response is empty
-        if isConnected && (isChannelJoined || message.event == Phoenix.joinEvent) && message.response == nil {
+        if isConnected && (isChannelJoined || message.event == Phoenix.joinEvent) {
             socket.writeString(message.json)
         }
     }
@@ -315,7 +316,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
                 let responseMessage = message
                 
                 // If the original message found
-                if let originalMessageIndex = self.sendingQueue.indexOf(responseMessage) {
+                if let originalMessageIndex = self.sendingQueue.indexOf({$0.message.isEqual(responseMessage)}) {
                     
                     // Get original message
                     let originalMessage = self.sendingQueue[originalMessageIndex]
@@ -323,8 +324,30 @@ public class Phoenix: NSObject, WebSocketDelegate {
                     // Remove original message from the queue
                     self.sendingQueue.removeAtIndex(originalMessageIndex)
                     
-                    // Set response of the original message
-                    originalMessage.response = responseMessage
+                    // Execute response handler in the background
+                    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
+                        
+                        // Successful response
+                        if responseMessage.payload?["status"] as? String == "ok" {
+                            originalMessage.responseHandler?(response: responseMessage, error: nil)
+                            
+                        // Error response
+                        } else {
+                            let errorReason = responseMessage.payload?["response"]?["reason"] as? String
+                                ??
+                                responseMessage.payload?["response"]?["error"] as? String
+                                ?? ""
+                            
+                            let errorDescription = "Sending a message failed because: \(errorReason)"
+                            
+                            let error = NSError(domain: "phoenix.message.error",
+                                                code: 0,
+                                                userInfo: [NSLocalizedFailureReasonErrorKey: errorReason,
+                                                           NSLocalizedDescriptionKey: errorDescription])
+                            
+                            originalMessage.responseHandler?(response: responseMessage, error: error)
+                        }
+                    }
                 }
             }
             
@@ -495,7 +518,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
         }
 
         dispatch_barrier_sync(queue.message) {
-            self.sendingQueue = self.sendingQueue.filter {$0.event != Phoenix.joinEvent}
+            self.sendingQueue = self.sendingQueue.filter {$0.message.event != Phoenix.joinEvent}
         }
         
         if autoReconnect && autoReconnectCurrentIntervalIndex <= autoReconnectIntervals.count - 1 {
