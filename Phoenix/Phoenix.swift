@@ -73,10 +73,14 @@ public class Phoenix: NSObject, WebSocketDelegate {
      ```
      */
     private var channels: [String: (isJoined: Bool?, eventListeners: [String: [WeakPhoenixListener]])] = [:]
+
+    /// The queue of messages to send. A message is deleted from it after receiving a response.
+    private var sendingBuffer: [(message: PhoenixMessage,
+                                 responseHandler: ((response: PhoenixMessage, error: NSError?) -> Void)?)] = []
     
-    /// The queue of messages to send.
-    private var sendingQueue: [(message: PhoenixMessage,
-                                responseHandler: ((response: PhoenixMessage, error: NSError?) -> Void)?)] = []
+    /// The access queues, which will be used for concurrent access to the `channels` and `sendingBuffer` objects.
+    private let accessQueue = (message: dispatch_queue_create("phoenix.message", DISPATCH_QUEUE_CONCURRENT),
+                               channel: dispatch_queue_create("phoenix.channel", DISPATCH_QUEUE_CONCURRENT))
     
     /// The heartbeat timer.
     private var heartbeatTimer = NSTimer()
@@ -98,12 +102,8 @@ public class Phoenix: NSObject, WebSocketDelegate {
         return socket.isConnected
     }
     
-    /// The operation queue, which is used to call listeners' methods.
-    private let queue = (starscream: dispatch_queue_create("phoenix.starscream", DISPATCH_QUEUE_CONCURRENT),
-                         message: dispatch_queue_create("phoenix.message", DISPATCH_QUEUE_CONCURRENT),
-                         channel: dispatch_queue_create("phoenix.channel", DISPATCH_QUEUE_CONCURRENT),
-                         listener: dispatch_queue_create("phoenix.listener", DISPATCH_QUEUE_CONCURRENT))
-    
+    /// The operation queue, which is used to call listeners methods.
+    public var listenerQueue = NSOperationQueue.mainQueue()
     
     // MARK: - Initialization
     
@@ -121,7 +121,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
         let urlComponents = NSURLComponents(URL: url, resolvingAgainstBaseURL: false)!
         
         if let parameters = parameters?.map({NSURLQueryItem(name: $0, value: $1)}) {
-
+            
             if urlComponents.queryItems == nil {
                 urlComponents.queryItems = parameters
             } else {
@@ -133,7 +133,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
         
         super.init()
         
-        socket.queue = queue.starscream
+        socket.queue = dispatch_queue_create("phoenix.starscream", DISPATCH_QUEUE_CONCURRENT)
         socket.delegate = self
     }
     
@@ -159,12 +159,12 @@ public class Phoenix: NSObject, WebSocketDelegate {
         if isConnected {
             socket.disconnect()
             
-            dispatch_barrier_sync(queue.channel) {
+            dispatch_barrier_sync(accessQueue.channel) {
                 self.channels = [:]
             }
             
-            dispatch_barrier_sync(queue.message) {
-                self.sendingQueue = []
+            dispatch_barrier_sync(accessQueue.message) {
+                self.sendingBuffer = []
             }
         }
     }
@@ -180,7 +180,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
         var needSendJoinMessage = false
         
         // If channel is not yet joined and joining is not started
-        dispatch_barrier_sync(queue.channel) {
+        dispatch_barrier_sync(accessQueue.channel) {
             if self.channels[topic] == nil {
                 self.channels[topic] = (isJoined: nil, eventListeners: [:])
             }
@@ -208,10 +208,10 @@ public class Phoenix: NSObject, WebSocketDelegate {
         
             var needResendMessages = false
             
-            dispatch_barrier_sync(self.queue.channel) {
+            dispatch_barrier_sync(self.accessQueue.channel) {
                 
                 // Join failed
-                if error != nil {
+                guard error == nil else {
                     
                     // Reset channel joining status
                     self.channels[message.topic]?.isJoined = nil
@@ -219,29 +219,30 @@ public class Phoenix: NSObject, WebSocketDelegate {
                     // Notify channel listeners about joining error
                     let eventListeners = self.channels[message.topic]?.eventListeners.flatMap {$1}
                     
-                    dispatch_async(self.queue.listener) {
+                    self.listenerQueue.addOperationWithBlock {
                         eventListeners?.forEach {
                             $0.listener?.phoenix?(self, didClose: message.topic, error: error)
                         }
                     }
                     
-                // Successful joining
-                } else {
-                    
-                    // Set channel status to is joined
-                    self.channels[message.topic]?.isJoined = true
-                    
-                    // Notify channel listeners about successful joining
-                    let eventListeners = self.channels[message.topic]?.eventListeners.flatMap {$1}
-                    
-                    dispatch_async(self.queue.listener) {
-                        eventListeners?.forEach {
-                            $0.listener?.phoenix?(self, didJoin: message.topic)
-                        }
-                    }
-                    
-                    needResendMessages = true
+                    return
                 }
+                
+                // Successful join
+                
+                // Set channel status to is joined
+                self.channels[message.topic]?.isJoined = true
+                
+                // Notify channel listeners about successful joining
+                let eventListeners = self.channels[message.topic]?.eventListeners.flatMap {$1}
+                
+                self.listenerQueue.addOperationWithBlock {
+                    eventListeners?.forEach {
+                        $0.listener?.phoenix?(self, didJoin: message.topic)
+                    }
+                }
+                
+                needResendMessages = true
             }
             
             guard needResendMessages else {
@@ -249,20 +250,19 @@ public class Phoenix: NSObject, WebSocketDelegate {
             }
             
             // Sending messages waiting channel join
-            var sendingQueue: [(message: PhoenixMessage,
-                                responseHandler: ((response: PhoenixMessage, error: NSError?) -> Void)?)]!
+            var sendingBuffer: [(message: PhoenixMessage,
+                                 responseHandler: ((response: PhoenixMessage, error: NSError?) -> Void)?)]!
             
-            dispatch_sync(self.queue.message) {
-                sendingQueue = self.sendingQueue
+            dispatch_sync(self.accessQueue.message) {
+                sendingBuffer = self.sendingBuffer
             }
             
-            sendingQueue.forEach {
+            sendingBuffer.forEach {
                 if $0.message.topic == message.topic {
                     self.send($0.message)
                 }
             }
         }
-        
     }
     
     // MARK: - Sending Messages
@@ -280,15 +280,15 @@ public class Phoenix: NSObject, WebSocketDelegate {
         join(message.topic)
         
         // Add message to the queue if needed
-        dispatch_barrier_sync(queue.message) {
-            if !self.sendingQueue.contains({$0.message.isEqual(message)}) {
-                self.sendingQueue.append((message: message, responseHandler: responseHandler))
+        dispatch_barrier_sync(accessQueue.message) {
+            if !self.sendingBuffer.contains({$0.message.isEqual(message)}) {
+                self.sendingBuffer.append((message: message, responseHandler: responseHandler))
             }
         }
         
         var isChannelJoined = false
         
-        dispatch_sync(queue.channel) {
+        dispatch_sync(accessQueue.channel) {
             isChannelJoined = self.channels[message.topic]?.isJoined ?? false
         }
         
@@ -312,27 +312,24 @@ public class Phoenix: NSObject, WebSocketDelegate {
         // Response message
         case Phoenix.replyEvent:
             
-            dispatch_barrier_async(queue.message) {
+            dispatch_barrier_async(accessQueue.message) {
                 let responseMessage = message
                 
                 // If the original message found
-                if let originalMessageIndex = self.sendingQueue.indexOf({$0.message.isEqual(responseMessage)}) {
+                if let originalMessageIndex = self.sendingBuffer.indexOf({$0.message.isEqual(responseMessage)}) {
                     
                     // Get original message
-                    let originalMessage = self.sendingQueue[originalMessageIndex]
+                    let originalMessage = self.sendingBuffer[originalMessageIndex]
                     
                     // Remove original message from the queue
-                    self.sendingQueue.removeAtIndex(originalMessageIndex)
+                    self.sendingBuffer.removeAtIndex(originalMessageIndex)
                     
-                    // Execute response handler in the background
-                    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
+                    // Execute response handler
+                    self.listenerQueue.addOperationWithBlock {
                         
-                        // Successful response
-                        if responseMessage.payload?["status"] as? String == "ok" {
-                            originalMessage.responseHandler?(response: responseMessage, error: nil)
-                            
                         // Error response
-                        } else {
+                        guard responseMessage.payload?["status"] as? String == "ok" else {
+                        
                             let errorReason = responseMessage.payload?["response"]?["reason"] as? String
                                 ??
                                 responseMessage.payload?["response"]?["error"] as? String
@@ -346,7 +343,13 @@ public class Phoenix: NSObject, WebSocketDelegate {
                                                            NSLocalizedDescriptionKey: errorDescription])
                             
                             originalMessage.responseHandler?(response: responseMessage, error: error)
+                            
+                            return
                         }
+                        
+                        
+                        // Successful response
+                        originalMessage.responseHandler?(response: responseMessage, error: nil)
                     }
                 }
             }
@@ -354,7 +357,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
         // Error or close channel message
         case Phoenix.errorEvent, Phoenix.closeEvent:
             
-            dispatch_barrier_async(queue.channel) {
+            dispatch_barrier_async(accessQueue.channel) {
                 self.channels[message.topic]?.isJoined = nil
                 
                 // Notify channel listeners
@@ -373,7 +376,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
                 // Notify channel listeners about channel error or closing
                 let eventListeners = self.channels[message.topic]?.eventListeners.flatMap {$1}
                 
-                dispatch_async(self.queue.listener) {
+                self.listenerQueue.addOperationWithBlock {
                     eventListeners?.forEach {
                         $0.listener?.phoenix?(self, didClose: message.topic, error: error)
                     }
@@ -384,11 +387,12 @@ public class Phoenix: NSObject, WebSocketDelegate {
         default:
             
             // Notify channel and event listeners, channel listeners
-            dispatch_async(queue.channel) {
+            dispatch_async(accessQueue.channel) {
+                
                 let eventListeners = (self.channels[message.topic]?.eventListeners[message.event] ?? []) +
                                      (self.channels[message.topic]?.eventListeners["*"] ?? [])
                 
-                dispatch_async(self.queue.listener) {
+                self.listenerQueue.addOperationWithBlock {
                     eventListeners.forEach {
                         $0.listener?.phoenix(self, didReceive: message)
                     }
@@ -414,7 +418,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
         // Join the channel (if needed)
         join(topic)
         
-        dispatch_barrier_sync(queue.channel) {
+        dispatch_barrier_sync(accessQueue.channel) {
             
             // Asterisk is equal to all channel events
             let event = event ?? "*"
@@ -438,7 +442,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
     public func removeListener(listener: PhoenixListener, forChannel topic: String, event: String? = nil) {
         
         // Remove the listener
-        dispatch_barrier_sync(queue.channel) {
+        dispatch_barrier_sync(accessQueue.channel) {
             
             // If event == nil, then remove listener from all events
             guard let event = event else {
@@ -480,10 +484,10 @@ public class Phoenix: NSObject, WebSocketDelegate {
         var channels: [String: (isJoined: Bool?, eventListeners: [String: [WeakPhoenixListener]])]!
         
         // Notify listeners about connection
-        dispatch_sync(queue.channel) {
+        dispatch_sync(accessQueue.channel) {
             let eventListeners = self.channels.flatMap {$1.eventListeners.flatMap {$1}}
             
-            dispatch_async(self.queue.listener) {
+            self.listenerQueue.addOperationWithBlock {
                 eventListeners.forEach {
                     $0.listener?.phoenixDidConnect?(self)
                 }
@@ -513,39 +517,39 @@ public class Phoenix: NSObject, WebSocketDelegate {
             self.heartbeatTimer.invalidate()
         }
 
-        dispatch_barrier_sync(queue.channel) {
+        dispatch_barrier_sync(accessQueue.channel) {
             self.channels.forEach {self.channels[$0.0]?.isJoined = nil}
         }
 
-        dispatch_barrier_sync(queue.message) {
-            self.sendingQueue = self.sendingQueue.filter {$0.message.event != Phoenix.joinEvent}
+        dispatch_barrier_sync(accessQueue.message) {
+            self.sendingBuffer = self.sendingBuffer.filter {$0.message.event != Phoenix.joinEvent}
         }
         
-        if autoReconnect && autoReconnectCurrentIntervalIndex <= autoReconnectIntervals.count - 1 {
-
-            // Auto reconnect after delay interval
-            dispatch_async(dispatch_get_main_queue()) {
-                NSTimer.scheduledTimerWithTimeInterval(self.autoReconnectIntervals[self.autoReconnectCurrentIntervalIndex],
-                                                       target: self,
-                                                       selector: #selector(self.connect),
-                                                       userInfo: nil,
-                                                       repeats: false)
-                
-                self.autoReconnectCurrentIntervalIndex += 1
-            }
-        } else {
+        // Without auto reconnection just notify listeners about disconnection
+        guard autoReconnect && autoReconnectCurrentIntervalIndex <= autoReconnectIntervals.count - 1 else {
             
-            // Without auto reconnection just notify listeners about disconnection
-            dispatch_async(queue.channel) {
+            dispatch_async(accessQueue.channel) {
                 let eventListeners = self.channels.flatMap {$1.eventListeners.flatMap {$1}}
                 
-                dispatch_async(self.queue.listener) {
+                self.listenerQueue.addOperationWithBlock {
                     eventListeners.forEach {
                         $0.listener?.phoenixDidDisconnect?(self, error: error)
                     }
                 }
             }
             
+            return
+        }
+        
+        // Auto reconnect after delay interval
+        dispatch_async(dispatch_get_main_queue()) {
+            NSTimer.scheduledTimerWithTimeInterval(self.autoReconnectIntervals[self.autoReconnectCurrentIntervalIndex],
+                                                   target: self,
+                                                   selector: #selector(self.connect),
+                                                   userInfo: nil,
+                                                   repeats: false)
+            
+            self.autoReconnectCurrentIntervalIndex += 1
         }
     }
     
