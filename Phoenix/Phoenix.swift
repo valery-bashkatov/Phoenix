@@ -152,9 +152,8 @@ public class Phoenix: NSObject, WebSocketDelegate {
      Disconnects `Phoenix`. If `autoReconnect` is true, it will be set to false.
      */
     public func disconnect() {
-        if autoReconnect {
-            autoReconnect = false
-        }
+        autoReconnect = false
+        autoReconnectCurrentIntervalIndex = 0
         
         if isConnected {
             socket.disconnect()
@@ -271,7 +270,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
      Adds a message to the sending queue.
      
      - parameter message: The message to send.
-     - parameter responseHandler: The closure, which is called after message sending and receiving a response from the server. It will be executed in the background queue.
+     - parameter responseHandler: The closure, which is called after message sending and receiving a response from the server. It will be executed in the `listenerQueue`.
      */
     public func send(message: PhoenixMessage,
                      responseHandler: ((response: PhoenixMessage, error: NSError?) -> Void)? = nil) {
@@ -404,7 +403,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
     // MARK: - Adding and Removing Listeners
     
     /**
-     Adds a listener object for the specified channel topic and event.
+     Adds a listener object for the specified channel topic and event. Listener methods will be executed in the `listenerQueue`.
      
      - parameter listener: The listener.
      - parameter topic: The channel topic.
@@ -483,17 +482,29 @@ public class Phoenix: NSObject, WebSocketDelegate {
         
         var channels: [String: (isJoined: Bool?, eventListeners: [String: [WeakPhoenixListener]])]!
         
-        // Notify listeners about connection
-        dispatch_sync(accessQueue.channel) {
-            let eventListeners = self.channels.flatMap {$1.eventListeners.flatMap {$1}}
+        // If this is the initial connection, then notify listeners about connection
+        if autoReconnectCurrentIntervalIndex == 0 {
             
-            self.listenerQueue.addOperationWithBlock {
+            dispatch_sync(accessQueue.channel) {
+                var uniqueEventListeners = [WeakPhoenixListener]()
+                let eventListeners = self.channels.flatMap {$1.eventListeners.flatMap {$1}}
+                
                 eventListeners.forEach {
-                    $0.listener?.phoenixDidConnect?(self)
+                    (eventListener: WeakPhoenixListener) in
+                    
+                    if !uniqueEventListeners.contains({$0.listener === eventListener.listener}) {
+                        uniqueEventListeners.append(eventListener)
+                    }
                 }
+                
+                self.listenerQueue.addOperationWithBlock {
+                    uniqueEventListeners.forEach {
+                        $0.listener?.phoenixDidConnect?(self)
+                    }
+                }
+                
+                channels = self.channels
             }
-            
-            channels = self.channels
         }
         
         channels.forEach {join($0.0)}
@@ -529,10 +540,19 @@ public class Phoenix: NSObject, WebSocketDelegate {
         guard autoReconnect && autoReconnectCurrentIntervalIndex <= autoReconnectIntervals.count - 1 else {
             
             dispatch_async(accessQueue.channel) {
+                var uniqueEventListeners = [WeakPhoenixListener]()
                 let eventListeners = self.channels.flatMap {$1.eventListeners.flatMap {$1}}
                 
+                eventListeners.forEach {
+                    (eventListener: WeakPhoenixListener) in
+                    
+                    if !uniqueEventListeners.contains({$0.listener === eventListener.listener}) {
+                        uniqueEventListeners.append(eventListener)
+                    }
+                }
+                
                 self.listenerQueue.addOperationWithBlock {
-                    eventListeners.forEach {
+                    uniqueEventListeners.forEach {
                         $0.listener?.phoenixDidDisconnect?(self, error: error)
                     }
                 }
