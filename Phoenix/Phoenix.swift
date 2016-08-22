@@ -153,7 +153,6 @@ public class Phoenix: NSObject, WebSocketDelegate {
      */
     public func disconnect() {
         autoReconnect = false
-        autoReconnectCurrentIntervalIndex = 0
         
         if isConnected {
             socket.disconnect()
@@ -536,9 +535,22 @@ public class Phoenix: NSObject, WebSocketDelegate {
             self.sendingBuffer = self.sendingBuffer.filter {$0.message.event != Phoenix.joinEvent}
         }
         
-        // Without auto reconnection just notify listeners about disconnection
-        guard autoReconnect && autoReconnectCurrentIntervalIndex <= autoReconnectIntervals.count - 1 else {
-            
+        if autoReconnect && autoReconnectCurrentIntervalIndex <= autoReconnectIntervals.count - 1 {
+
+            // Auto reconnect after delay interval
+            dispatch_async(dispatch_get_main_queue()) {
+                NSTimer.scheduledTimerWithTimeInterval(self.autoReconnectIntervals[self.autoReconnectCurrentIntervalIndex],
+                                                       target: self,
+                                                       selector: #selector(self.connect),
+                                                       userInfo: nil,
+                                                       repeats: false)
+                
+                self.autoReconnectCurrentIntervalIndex += 1
+            }
+        
+        } else {
+        
+            // Notify listeners about disconnection
             dispatch_async(accessQueue.channel) {
                 var uniqueEventListeners = [WeakPhoenixListener]()
                 let eventListeners = self.channels.flatMap {$1.eventListeners.flatMap {$1}}
@@ -556,21 +568,11 @@ public class Phoenix: NSObject, WebSocketDelegate {
                         $0.listener?.phoenixDidDisconnect?(self, error: error)
                     }
                 }
+                
+                self.autoReconnectCurrentIntervalIndex = 0
             }
-            
-            return
         }
         
-        // Auto reconnect after delay interval
-        dispatch_async(dispatch_get_main_queue()) {
-            NSTimer.scheduledTimerWithTimeInterval(self.autoReconnectIntervals[self.autoReconnectCurrentIntervalIndex],
-                                                   target: self,
-                                                   selector: #selector(self.connect),
-                                                   userInfo: nil,
-                                                   repeats: false)
-            
-            self.autoReconnectCurrentIntervalIndex += 1
-        }
     }
     
     /// :nodoc:
