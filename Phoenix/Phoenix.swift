@@ -406,20 +406,28 @@ public class Phoenix: NSObject, WebSocketDelegate {
      
      - parameter listener: The listener.
      - parameter topic: The channel topic.
-     - parameter event: The event name. If is `nil`, then all channel events.
+     - parameter event: The event name. If is `nil`, then all events of the channel.
      */
     public func addListener(listener: PhoenixListener, forChannel topic: String, event: String? = nil) {
 
-        // Remove the listener if it already exist
-        removeListener(listener, forChannel: topic, event: event)
+        // Asterisk is equal to all events of the channel
+        let event = event ?? "*"
+        
+        var needAddListener = true
+        
+        // If a listener already exists, do not add it again
+        dispatch_sync(accessQueue.channel) {
+            needAddListener = !(self.channels[topic]?.eventListeners[event]?.contains({$0.listener === listener}) ?? false)
+        }
+        
+        guard needAddListener else {
+            return
+        }
         
         // Join the channel (if needed)
         join(topic)
         
         dispatch_barrier_sync(accessQueue.channel) {
-            
-            // Asterisk is equal to all channel events
-            let event = event ?? "*"
             
             if self.channels[topic]?.eventListeners[event] == nil {
                 self.channels[topic]?.eventListeners[event] = []
@@ -435,7 +443,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
      
      - parameter listener: The listener.
      - parameter topic: The channel topic.
-     - parameter event: The event name; `nil` means all channel events.
+     - parameter event: The event name; `nil` means all events of the channel.
      */
     public func removeListener(listener: PhoenixListener, forChannel topic: String, event: String? = nil) {
         
