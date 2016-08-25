@@ -74,13 +74,15 @@ public class Phoenix: NSObject, WebSocketDelegate {
      */
     private var channels: [String: (isJoined: Bool?, eventListeners: [String: [WeakPhoenixListener]])] = [:]
 
+    /// The access queue, which will be used for concurrent access to the `channels` dictionary.
+    private let channelsAccessQueue = dispatch_queue_create("phoenix.channels", DISPATCH_QUEUE_CONCURRENT)
+    
     /// The queue of messages to send. A message is deleted from it after receiving a response.
     private var sendingBuffer: [(message: PhoenixMessage,
                                  responseHandler: ((response: PhoenixMessage, error: NSError?) -> Void)?)] = []
     
-    /// The access queues, which will be used for concurrent access to the `channels` and `sendingBuffer` objects.
-    private let accessQueue = (message: dispatch_queue_create("phoenix.message", DISPATCH_QUEUE_CONCURRENT),
-                               channel: dispatch_queue_create("phoenix.channel", DISPATCH_QUEUE_CONCURRENT))
+    /// The access queue, which will be used for concurrent access to the `sendingBuffer` dictionary.
+    private let sendingBufferAccessQueue = dispatch_queue_create("phoenix.sendingBuffer", DISPATCH_QUEUE_CONCURRENT)
     
     /// The heartbeat timer.
     private var heartbeatTimer = NSTimer()
@@ -157,11 +159,11 @@ public class Phoenix: NSObject, WebSocketDelegate {
         if isConnected {
             socket.disconnect()
             
-            dispatch_barrier_sync(accessQueue.channel) {
+            dispatch_barrier_sync(channelsAccessQueue) {
                 self.channels = [:]
             }
             
-            dispatch_barrier_sync(accessQueue.message) {
+            dispatch_barrier_sync(sendingBufferAccessQueue) {
                 self.sendingBuffer = []
             }
         }
@@ -178,7 +180,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
         var needSendJoinMessage = false
         
         // If channel is not yet joined and joining is not started
-        dispatch_barrier_sync(accessQueue.channel) {
+        dispatch_barrier_sync(channelsAccessQueue) {
             if self.channels[topic] == nil {
                 self.channels[topic] = (isJoined: nil, eventListeners: [:])
             }
@@ -206,7 +208,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
         
             var needResendMessages = false
             
-            dispatch_barrier_sync(self.accessQueue.channel) {
+            dispatch_barrier_sync(self.channelsAccessQueue) {
                 
                 // Join failed
                 guard error == nil else {
@@ -251,7 +253,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
             var sendingBuffer: [(message: PhoenixMessage,
                                  responseHandler: ((response: PhoenixMessage, error: NSError?) -> Void)?)]!
             
-            dispatch_sync(self.accessQueue.message) {
+            dispatch_sync(self.sendingBufferAccessQueue) {
                 sendingBuffer = self.sendingBuffer
             }
             
@@ -278,7 +280,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
         join(message.topic)
         
         // Add message to the queue if needed
-        dispatch_barrier_sync(accessQueue.message) {
+        dispatch_barrier_sync(sendingBufferAccessQueue) {
             if !self.sendingBuffer.contains({$0.message.isEqual(message)}) {
                 self.sendingBuffer.append((message: message, responseHandler: responseHandler))
             }
@@ -286,7 +288,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
         
         var isChannelJoined = false
         
-        dispatch_sync(accessQueue.channel) {
+        dispatch_sync(channelsAccessQueue) {
             isChannelJoined = self.channels[message.topic]?.isJoined ?? false
         }
         
@@ -310,7 +312,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
         // Response message
         case Phoenix.replyEvent:
             
-            dispatch_barrier_async(accessQueue.message) {
+            dispatch_barrier_async(sendingBufferAccessQueue) {
                 let responseMessage = message
                 
                 // If the original message found
@@ -355,7 +357,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
         // Error or close channel message
         case Phoenix.errorEvent, Phoenix.closeEvent:
             
-            dispatch_barrier_async(accessQueue.channel) {
+            dispatch_barrier_async(channelsAccessQueue) {
                 self.channels[message.topic]?.isJoined = nil
                 
                 // Notify channel listeners
@@ -385,7 +387,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
         default:
             
             // Notify channel and event listeners, channel listeners
-            dispatch_async(accessQueue.channel) {
+            dispatch_async(channelsAccessQueue) {
                 
                 let eventListeners = (self.channels[message.topic]?.eventListeners[message.event] ?? []) +
                                      (self.channels[message.topic]?.eventListeners["*"] ?? [])
@@ -416,7 +418,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
         var needAddListener = true
         
         // If a listener already exists, do not add it again
-        dispatch_sync(accessQueue.channel) {
+        dispatch_sync(channelsAccessQueue) {
             needAddListener = !(self.channels[topic]?.eventListeners[event]?.contains({$0.listener === listener}) ?? false)
         }
         
@@ -427,7 +429,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
         // Join the channel (if needed)
         join(topic)
         
-        dispatch_barrier_sync(accessQueue.channel) {
+        dispatch_barrier_sync(channelsAccessQueue) {
             
             if self.channels[topic]?.eventListeners[event] == nil {
                 self.channels[topic]?.eventListeners[event] = []
@@ -448,7 +450,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
     public func removeListener(listener: PhoenixListener, forChannel topic: String, event: String? = nil) {
         
         // Remove the listener
-        dispatch_barrier_sync(accessQueue.channel) {
+        dispatch_barrier_sync(channelsAccessQueue) {
             
             // If event == nil, then remove listener from all events
             guard let event = event else {
@@ -492,7 +494,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
         // If this is the initial connection, then notify listeners about connection
         if autoReconnectCurrentIntervalIndex == 0 {
             
-            dispatch_sync(accessQueue.channel) {
+            dispatch_async(channelsAccessQueue) {
                 var uniqueEventListeners = [WeakPhoenixListener]()
                 let eventListeners = self.channels.flatMap {$1.eventListeners.flatMap {$1}}
                 
@@ -535,11 +537,11 @@ public class Phoenix: NSObject, WebSocketDelegate {
             self.heartbeatTimer.invalidate()
         }
 
-        dispatch_barrier_sync(accessQueue.channel) {
+        dispatch_barrier_sync(channelsAccessQueue) {
             self.channels.forEach {self.channels[$0.0]?.isJoined = nil}
         }
 
-        dispatch_barrier_sync(accessQueue.message) {
+        dispatch_barrier_sync(sendingBufferAccessQueue) {
             self.sendingBuffer = self.sendingBuffer.filter {$0.message.event != Phoenix.joinEvent}
         }
         
@@ -559,7 +561,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
         } else {
         
             // Notify listeners about disconnection
-            dispatch_async(accessQueue.channel) {
+            dispatch_async(channelsAccessQueue) {
                 var uniqueEventListeners = [WeakPhoenixListener]()
                 let eventListeners = self.channels.flatMap {$1.eventListeners.flatMap {$1}}
                 
