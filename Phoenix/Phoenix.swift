@@ -44,6 +44,12 @@ public class Phoenix: NSObject, WebSocketDelegate {
     
     // MARK: - Properties
     
+    /// The WebSocket URL.
+    public let url: String
+    
+    /// The parameters, that will be added into the URL.
+    public let urlParameters: [String: String]?
+    
     /// The WebSocket object.
     private var socket: WebSocket
     
@@ -110,25 +116,27 @@ public class Phoenix: NSObject, WebSocketDelegate {
      Creates the `Phoenix` object.
      
      - parameter url: The URL of the WebSocket.
-     - parameter parameters: The URL encoded parameters that will be joined to the URL.
+     - parameter urlParameters: The parameters, that will be URL encoded and added into the URL.
      
      - returns: The `Phoenix` instance.
      */
-    public init(url: NSURL, parameters: [String: String]? = nil) {
+    public init(url: String, urlParameters: [String: String]? = nil) {
         
         // Make url with parameters from components
-        let urlComponents = NSURLComponents(URL: url, resolvingAgainstBaseURL: false)!
+        let urlComponents = NSURLComponents(URL: NSURL(string: url)!, resolvingAgainstBaseURL: false)!
         
-        if let parameters = parameters?.map({NSURLQueryItem(name: $0, value: $1)}) {
+        if let queryItems = urlParameters?.map({NSURLQueryItem(name: $0, value: $1)}) {
             
             if urlComponents.queryItems == nil {
-                urlComponents.queryItems = parameters
+                urlComponents.queryItems = queryItems
             } else {
-                urlComponents.queryItems! += parameters
+                urlComponents.queryItems! += queryItems
             }
         }
         
-        socket = WebSocket(url: urlComponents.URL!)
+        self.url = url
+        self.urlParameters = urlParameters
+        self.socket = WebSocket(url: urlComponents.URL!)
         
         super.init()
         
