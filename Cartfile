@@ -1,1 +1,1 @@
-github "daltoniam/Starscream"
+github "daltoniam/Starscream" ~> 1.1.3
