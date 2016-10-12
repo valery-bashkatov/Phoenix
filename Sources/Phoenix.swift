@@ -107,8 +107,11 @@ public class Phoenix: NSObject, WebSocketDelegate {
     /// The queue for all internal operations.
     private let phoenixQueue = dispatch_queue_create("phoenix", DISPATCH_QUEUE_SERIAL)
 
-    /// The operation queue, which is used to call listeners methods.
-    public var listenerQueue = NSOperationQueue.mainQueue()
+    /// The queue will be used to call listeners methods.
+    public var listenerQueue = dispatch_queue_create("phoenix.listener", DISPATCH_QUEUE_SERIAL)
+    
+    /// The queue will be used to call send's responses.
+    public var responseQueue = dispatch_queue_create("phoenix.response", DISPATCH_QUEUE_CONCURRENT)
     
     // MARK: - Initialization
     
@@ -219,7 +222,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
                     // Notify channel listeners about joining error
                     let eventListeners = self.channels[message.topic]?.eventListeners.flatMap {$1}
                     
-                    self.listenerQueue.addOperationWithBlock {
+                    dispatch_async(self.listenerQueue) {
                         eventListeners?.forEach {
                             $0.listener?.phoenix?(self, didClose: message.topic, error: error)
                         }
@@ -236,7 +239,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
                 // Notify channel listeners about successful joining
                 let eventListeners = self.channels[message.topic]?.eventListeners.flatMap {$1}
                 
-                self.listenerQueue.addOperationWithBlock {
+                dispatch_async(self.listenerQueue) {
                     eventListeners?.forEach {
                         $0.listener?.phoenix?(self, didJoin: message.topic)
                     }
@@ -310,7 +313,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
                 sendingBuffer.removeAtIndex(originalMessageIndex)
                 
                 // Execute response handler
-                listenerQueue.addOperationWithBlock {
+                dispatch_async(responseQueue) {
                     
                     // Error response
                     guard responseMessage.payload?["status"] as? String == "ok" else {
@@ -331,7 +334,6 @@ public class Phoenix: NSObject, WebSocketDelegate {
                         
                         return
                     }
-                    
                     
                     // Successful response
                     originalMessage.responseHandler?(response: responseMessage, error: nil)
@@ -359,7 +361,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
             // Notify channel listeners about channel error or closing
             let eventListeners = channels[message.topic]?.eventListeners.flatMap {$1}
             
-            listenerQueue.addOperationWithBlock {
+            dispatch_async(listenerQueue) {
                 eventListeners?.forEach {
                     $0.listener?.phoenix?(self, didClose: message.topic, error: error)
                 }
@@ -372,7 +374,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
             let eventListeners = (channels[message.topic]?.eventListeners[message.event] ?? []) +
                                  (channels[message.topic]?.eventListeners["*"] ?? [])
             
-            listenerQueue.addOperationWithBlock {
+            dispatch_async(listenerQueue) {
                 eventListeners.forEach {
                     $0.listener?.phoenix(self, didReceive: message)
                 }
@@ -477,7 +479,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
                 }
             }
             
-            listenerQueue.addOperationWithBlock {
+            dispatch_async(listenerQueue) {
                 uniqueEventListeners.forEach {
                     $0.listener?.phoenixDidConnect?(self)
                 }
@@ -533,7 +535,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
                 }
             }
             
-            listenerQueue.addOperationWithBlock {
+            dispatch_async(listenerQueue) {
                 uniqueEventListeners.forEach {
                     $0.listener?.phoenixDidDisconnect?(self, error: error)
                 }

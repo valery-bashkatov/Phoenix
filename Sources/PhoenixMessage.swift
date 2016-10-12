@@ -52,7 +52,7 @@ public class PhoenixMessage: NSObject {
      
      - returns: The `PhoenixMessage`.
      */
-    public init(topic: String, event: String, payload: [String: AnyObject]? = nil, ref: String = NSUUID().UUIDString) {
+    init(topic: String, event: String, payload: [String: AnyObject]? = nil, ref: String) {
         self.topic = topic
         self.event = event
         self.payload = payload
@@ -85,6 +85,19 @@ public class PhoenixMessage: NSObject {
                   event: jsonObject["event"] as! String,
                   payload: jsonObject["payload"] as? [String: AnyObject],
                   ref: jsonObject["ref"] as? String ?? NSUUID().UUIDString)
+    }
+    
+    /**
+     Creates `PhoenixMessage` object with specified parameters.
+     
+     - parameter topic: The message's topic name.
+     - parameter event: An event name.
+     - parameter payload: The payload of the message.
+     
+     - returns: The `PhoenixMessage`.
+     */
+    public convenience init(topic: String, event: String, payload: [String: AnyObject]? = nil) {
+        self.init(topic: topic, event: event, payload: payload, ref: NSUUID().UUIDString)
     }
     
     // MARK: - Comparison

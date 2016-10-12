@@ -45,7 +45,7 @@
 		83BF59201D450FA500D2BC01 = {
 			isa = PBXGroup;
 			children = (
-				83BF592C1D450FA500D2BC01 /* Phoenix */,
+				83BF592C1D450FA500D2BC01 /* Sources */,
 				838242251D45130D0087BFE5 /* Frameworks */,
 				83BF592B1D450FA500D2BC01 /* Products */,
 			);
@@ -59,7 +59,7 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		83BF592C1D450FA500D2BC01 /* Phoenix */ = {
+		83BF592C1D450FA500D2BC01 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
 				83BF592F1D450FA500D2BC01 /* Info.plist */,
@@ -67,7 +67,7 @@
 				8309109C1D45316D00217912 /* PhoenixMessage.swift */,
 				83C359561D4E76E200479E2C /* PhoenixListener.swift */,
 			);
-			path = Phoenix;
+			path = Sources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -279,7 +279,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Carthage/Build/iOS",
 				);
-				INFOPLIST_FILE = Phoenix/Info.plist;
+				INFOPLIST_FILE = Sources/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
@@ -302,7 +302,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Carthage/Build/iOS",
 				);
-				INFOPLIST_FILE = Phoenix/Info.plist;
+				INFOPLIST_FILE = Sources/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
