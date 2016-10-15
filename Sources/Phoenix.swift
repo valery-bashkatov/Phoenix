@@ -143,7 +143,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
         
         super.init()
         
-        socket.queue = phoenixQueue
+        socket.callbackQueue = phoenixQueue
         socket.delegate = self
     }
     
