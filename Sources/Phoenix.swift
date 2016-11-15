@@ -82,13 +82,20 @@ public class Phoenix: NSObject, WebSocketDelegate {
 
     /// The queue of messages to send. A message is deleted from it after receiving a response.
     private var sendingBuffer: [(message: PhoenixMessage,
+                                 date: NSDate,
                                  responseHandler: ((response: PhoenixMessage, error: NSError?) -> Void)?)] = []
+    
+    /// The sending buffer timeout timer. Used for removing messages with expired response.
+    private var sendingBufferTimeoutTimer = NSTimer()
+    
+    /// The sending buffer timeout timer interval (in seconds).
+    public var sendingBufferTimeoutInterval = 10.0
     
     /// The heartbeat timer.
     private var heartbeatTimer = NSTimer()
     
     /// The heartbeat interval (in seconds).
-    private var heartbeatInterval = 20.0
+    public var heartbeatInterval = 20.0
     
     /// A Boolean value that indicates a need of auto reconnections.
     public var autoReconnect = true
@@ -145,8 +152,18 @@ public class Phoenix: NSObject, WebSocketDelegate {
         
         socket.callbackQueue = phoenixQueue
         socket.delegate = self
+        
+        dispatch_async(dispatch_get_main_queue()) {
+            self.sendingBufferTimeoutTimer.invalidate()
+            self.sendingBufferTimeoutTimer = NSTimer.scheduledTimerWithTimeInterval(
+                                                self.sendingBufferTimeoutInterval,
+                                                target: self,
+                                                selector: #selector(self.removeExpiredMessages),
+                                                userInfo: nil,
+                                                repeats: true)
+        }
     }
-    
+
     // MARK: - Connection
     
     /**
@@ -275,7 +292,9 @@ public class Phoenix: NSObject, WebSocketDelegate {
             
             // Add message to the queue if needed
             if !self.sendingBuffer.contains({$0.message.isEqual(message)}) {
-                self.sendingBuffer.append((message: message, responseHandler: responseHandler))
+                self.sendingBuffer.append((message: message,
+                                           date: NSDate(),
+                                           responseHandler: responseHandler))
             }
             
             let isChannelJoined = self.channels[message.topic]?.isJoined ?? false
@@ -323,7 +342,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
                                           responseMessage.payload?["response"]?["error"] as? String
                                           ?? ""
                         
-                        let errorDescription = "Sending a message failed because: \(errorReason)"
+                        let errorDescription = "Message failed to send: \(errorReason)"
                         
                         let error = NSError(domain: "phoenix.message.error",
                                             code: 0,
@@ -353,8 +372,8 @@ public class Phoenix: NSObject, WebSocketDelegate {
             
             let errorDescription = "Channel is closed by the server because: \(errorReason)"
             
-            let error = NSError(domain: "phoenix.message.error",
-                                code: 0,
+            let error = NSError(domain: "phoenix.channel.error",
+                                code: 1,
                                 userInfo: [NSLocalizedFailureReasonErrorKey: errorReason,
                                            NSLocalizedDescriptionKey: errorDescription])
             
@@ -377,6 +396,39 @@ public class Phoenix: NSObject, WebSocketDelegate {
             dispatch_async(listenerQueue) {
                 eventListeners.forEach {
                     $0.listener?.phoenix(self, didReceive: message)
+                }
+            }
+        }
+    }
+    
+    // MARK: - Removing Expired Messages
+    
+    /**
+     Removes messages from sending buffer with expired response timeout.
+     */
+    @objc private func removeExpiredMessages() {
+        
+        // Remove expired messages from the sending buffer
+        for expiredItem in sendingBuffer
+        where NSDate().timeIntervalSinceDate(expiredItem.date) > (sendingBufferTimeoutInterval / 2) {
+            
+            dispatch_async(phoenixQueue) {
+                
+                if let index = self.sendingBuffer.indexOf ({$0.message.isEqual(expiredItem.message)}) {
+                    self.sendingBuffer.removeAtIndex(index)
+                    
+                    dispatch_async(self.responseQueue) {
+                        
+                        let errorReason = "Timeout expired."
+                        let errorDescription = "Message failed to send: timeout expired."
+                        
+                        let error = NSError(domain: "phoenix.message.error",
+                                            code: 2,
+                                            userInfo: [NSLocalizedFailureReasonErrorKey: errorReason,
+                                                NSLocalizedDescriptionKey: errorDescription])
+                        
+                        expiredItem.responseHandler?(response: expiredItem.message, error: error)
+                    }
                 }
             }
         }
