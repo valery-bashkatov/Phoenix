@@ -9,7 +9,7 @@
 import Foundation
 
 /// The `PhoenixListener` protocol describes methods of the `Phoenix`'s listeners.
-@objc public protocol PhoenixListener: class {
+public protocol PhoenixListener: class {
     
     /**
      Called when a message is received.
@@ -24,7 +24,7 @@ import Foundation
      
      - parameter phoenix: The `Phoenix` object that triggered the event.
      */
-    optional func phoenixDidConnect(phoenix: Phoenix)
+    func phoenixDidConnect(phoenix: Phoenix)
     
     /**
      Called when `Phoenix` disconnected.
@@ -32,7 +32,7 @@ import Foundation
      - parameter phoenix: The `Phoenix` object that triggered the event.
      - parameter error: An error object with the cause.
      */
-    optional func phoenixDidDisconnect(phoenix: Phoenix, error: NSError?)
+    func phoenixDidDisconnect(phoenix: Phoenix, error: NSError?)
 
     /**
      Called when the channel joined.
@@ -40,7 +40,7 @@ import Foundation
      - parameter phoenix: The `Phoenix` object that triggered the event.
      - parameter topic: The channel's topic.
      */
-    optional func phoenix(phoenix: Phoenix, didJoin topic: String)
+    func phoenix(phoenix: Phoenix, didJoin topic: String)
     
     /**
      Called when the channel closed.
@@ -49,5 +49,5 @@ import Foundation
      - parameter topic: The channel's topic.
      - parameter error: An error object with the cause.
      */
-    optional func phoenix(phoenix: Phoenix, didClose topic: String, error: NSError?)
+    func phoenix(phoenix: Phoenix, didClose topic: String, error: NSError?)
 }

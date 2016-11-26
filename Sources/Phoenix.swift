@@ -81,27 +81,23 @@ public class Phoenix: NSObject, WebSocketDelegate {
     private var channels: [String: (isJoined: Bool?, eventListeners: [String: [WeakPhoenixListener]])] = [:]
 
     /// The queue of messages to send. A message is deleted from it after receiving a response.
-    private var sendingBuffer: [(message: PhoenixMessage,
-                                 date: NSDate,
-                                 responseHandler: ((response: PhoenixMessage, error: NSError?) -> Void)?)] = []
+    private var sendingBuffer: [PhoenixMessage: (responseTimeoutTimer: dispatch_source_t,
+                                                 responseHandler: ((response: PhoenixMessage, error: NSError?) -> Void)?)] = [:]
     
-    /// The sending buffer timeout timer. Used for removing messages with expired response.
-    private var sendingBufferTimeoutTimer = NSTimer()
-    
-    /// The sending buffer timeout timer interval (in seconds).
-    public var sendingBufferTimeoutInterval = 10.0
+    /// The response timeout (in seconds).
+    public var responseTimeout = 5
     
     /// The heartbeat timer.
     private var heartbeatTimer = NSTimer()
     
     /// The heartbeat interval (in seconds).
-    public var heartbeatInterval = 20.0
+    public var heartbeatInterval = 20
     
     /// A Boolean value that indicates a need of auto reconnections.
     public var autoReconnect = true
     
     /// The auto reconnection delay intervals (in seconds). The first try, second, third and so on.
-    public var autoReconnectIntervals = [1.0, 2.0, 3.0, 4.0, 5.0]
+    public var autoReconnectIntervals = [1, 2, 3, 4, 5]
     
     /// An index of the current reconnection interval in the `autoReconnectIntervals` list.
     private var autoReconnectCurrentIntervalIndex = 0
@@ -152,16 +148,6 @@ public class Phoenix: NSObject, WebSocketDelegate {
         
         socket.callbackQueue = phoenixQueue
         socket.delegate = self
-        
-        dispatch_async(dispatch_get_main_queue()) {
-            self.sendingBufferTimeoutTimer.invalidate()
-            self.sendingBufferTimeoutTimer = NSTimer.scheduledTimerWithTimeInterval(
-                                                self.sendingBufferTimeoutInterval,
-                                                target: self,
-                                                selector: #selector(self.removeExpiredMessages),
-                                                userInfo: nil,
-                                                repeats: true)
-        }
     }
 
     // MARK: - Connection
@@ -188,7 +174,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
                 self.socket.disconnect()
                 
                 self.channels = [:]
-                self.sendingBuffer = []
+                self.sendingBuffer = [:]
             }
         }
     }
@@ -241,7 +227,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
                     
                     dispatch_async(self.listenerQueue) {
                         eventListeners?.forEach {
-                            $0.listener?.phoenix?(self, didClose: message.topic, error: error)
+                            $0.listener?.phoenix(self, didClose: message.topic, error: error)
                         }
                     }
                     
@@ -258,16 +244,14 @@ public class Phoenix: NSObject, WebSocketDelegate {
                 
                 dispatch_async(self.listenerQueue) {
                     eventListeners?.forEach {
-                        $0.listener?.phoenix?(self, didJoin: message.topic)
+                        $0.listener?.phoenix(self, didJoin: message.topic)
                     }
                 }
                 
-                let sendingBuffer = self.sendingBuffer
-                
                 // Sending messages waiting channel join
-                sendingBuffer.forEach {
-                    if $0.message.topic == message.topic {
-                        self.send($0.message)
+                self.sendingBuffer.forEach {
+                    if $0.0.topic == message.topic {
+                        self.send($0.0)
                     }
                 }
             }
@@ -291,10 +275,47 @@ public class Phoenix: NSObject, WebSocketDelegate {
             self.join(message.topic)
             
             // Add message to the queue if needed
-            if !self.sendingBuffer.contains({$0.message.isEqual(message)}) {
-                self.sendingBuffer.append((message: message,
-                                           date: NSDate(),
-                                           responseHandler: responseHandler))
+            if self.sendingBuffer[message] == nil {
+                
+                // Create and set response timeout timer
+                let responseTimeoutTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER,
+                                                                  0,
+                                                                  0,
+                                                                  self.responseQueue)
+                
+                let timeout = dispatch_time(DISPATCH_TIME_NOW, Int64(self.responseTimeout) * Int64(NSEC_PER_SEC))
+                
+                dispatch_source_set_timer(responseTimeoutTimer, timeout, timeout, 1 * NSEC_PER_SEC)
+                
+                // If the timer is triggered, cancel it, find and delete message from sending queue and call message's response handler with timeout error
+                dispatch_source_set_event_handler(responseTimeoutTimer) {
+
+                    dispatch_source_cancel(responseTimeoutTimer)
+                    
+                    dispatch_async(self.phoenixQueue) {
+
+                        if self.sendingBuffer.removeValueForKey(message) != nil {
+                            
+                            dispatch_async(self.responseQueue) {
+                                
+                                let errorReason = "Response timeout expired."
+                                let errorDescription = "Message failed to send: response timeout expired."
+                                
+                                let error = NSError(domain: "phoenix.message.error",
+                                                    code: 2,
+                                                    userInfo: [NSLocalizedFailureReasonErrorKey: errorReason,
+                                                               NSLocalizedDescriptionKey: errorDescription])
+                                
+                                responseHandler?(response: message, error: error)
+                            }
+                        }
+                    }
+                }
+                
+                dispatch_resume(responseTimeoutTimer)
+                
+                self.sendingBuffer[message] = (responseTimeoutTimer: responseTimeoutTimer,
+                                               responseHandler: responseHandler)
             }
             
             let isChannelJoined = self.channels[message.topic]?.isJoined ?? false
@@ -322,14 +343,11 @@ public class Phoenix: NSObject, WebSocketDelegate {
             
             let responseMessage = message
             
-            // If original message found
-            if let originalMessageIndex = sendingBuffer.indexOf({$0.message.isEqual(responseMessage)}) {
+            // If original message found, delete it and call response handler
+            if let originalMessage = sendingBuffer.removeValueForKey(responseMessage) {
                 
-                // Get original message
-                let originalMessage = sendingBuffer[originalMessageIndex]
-                
-                // Remove original message from the queue
-                sendingBuffer.removeAtIndex(originalMessageIndex)
+                // Stop response timeout timer
+                dispatch_source_cancel(originalMessage.responseTimeoutTimer)
                 
                 // Execute response handler
                 dispatch_async(responseQueue) {
@@ -382,7 +400,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
             
             dispatch_async(listenerQueue) {
                 eventListeners?.forEach {
-                    $0.listener?.phoenix?(self, didClose: message.topic, error: error)
+                    $0.listener?.phoenix(self, didClose: message.topic, error: error)
                 }
             }
             
@@ -396,39 +414,6 @@ public class Phoenix: NSObject, WebSocketDelegate {
             dispatch_async(listenerQueue) {
                 eventListeners.forEach {
                     $0.listener?.phoenix(self, didReceive: message)
-                }
-            }
-        }
-    }
-    
-    // MARK: - Removing Expired Messages
-    
-    /**
-     Removes messages from sending buffer with expired response timeout.
-     */
-    @objc private func removeExpiredMessages() {
-        
-        // Remove expired messages from the sending buffer
-        for expiredItem in sendingBuffer
-        where NSDate().timeIntervalSinceDate(expiredItem.date) > (sendingBufferTimeoutInterval / 2) {
-            
-            dispatch_async(phoenixQueue) {
-                
-                if let index = self.sendingBuffer.indexOf ({$0.message.isEqual(expiredItem.message)}) {
-                    self.sendingBuffer.removeAtIndex(index)
-                    
-                    dispatch_async(self.responseQueue) {
-                        
-                        let errorReason = "Timeout expired."
-                        let errorDescription = "Message failed to send: timeout expired."
-                        
-                        let error = NSError(domain: "phoenix.message.error",
-                                            code: 2,
-                                            userInfo: [NSLocalizedFailureReasonErrorKey: errorReason,
-                                                NSLocalizedDescriptionKey: errorDescription])
-                        
-                        expiredItem.responseHandler?(response: expiredItem.message, error: error)
-                    }
                 }
             }
         }
@@ -533,7 +518,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
             
             dispatch_async(listenerQueue) {
                 uniqueEventListeners.forEach {
-                    $0.listener?.phoenixDidConnect?(self)
+                    $0.listener?.phoenixDidConnect(self)
                 }
             }
         }
@@ -544,7 +529,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
         // Start heartbeat
         dispatch_async(dispatch_get_main_queue()) {
             self.heartbeatTimer.invalidate()
-            self.heartbeatTimer = NSTimer.scheduledTimerWithTimeInterval(self.heartbeatInterval,
+            self.heartbeatTimer = NSTimer.scheduledTimerWithTimeInterval(Double(self.heartbeatInterval),
                                                                          target: self,
                                                                          selector: #selector(self.sendHeartbeat),
                                                                          userInfo: nil,
@@ -559,13 +544,19 @@ public class Phoenix: NSObject, WebSocketDelegate {
 
         heartbeatTimer.invalidate()
         channels.forEach {channels[$0.0]?.isJoined = nil}
-        sendingBuffer = sendingBuffer.filter {$0.message.event != Phoenix.joinEvent}
+        
+        // Remove join event messages
+        sendingBuffer.forEach {
+            if $0.0.event == Phoenix.joinEvent {
+                sendingBuffer.removeValueForKey($0.0)
+            }
+        }
         
         if autoReconnect && autoReconnectCurrentIntervalIndex <= autoReconnectIntervals.count - 1 {
             
             // Auto reconnect after delay interval
             dispatch_async(dispatch_get_main_queue()) {
-                NSTimer.scheduledTimerWithTimeInterval(self.autoReconnectIntervals[self.autoReconnectCurrentIntervalIndex],
+                NSTimer.scheduledTimerWithTimeInterval(Double(self.autoReconnectIntervals[self.autoReconnectCurrentIntervalIndex]),
                                                        target: self,
                                                        selector: #selector(self.connect),
                                                        userInfo: nil,
@@ -589,7 +580,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
             
             dispatch_async(listenerQueue) {
                 uniqueEventListeners.forEach {
-                    $0.listener?.phoenixDidDisconnect?(self, error: error)
+                    $0.listener?.phoenixDidDisconnect(self, error: error)
                 }
             }
             
