@@ -306,7 +306,13 @@ public class Phoenix: NSObject, WebSocketDelegate {
                                                     userInfo: [NSLocalizedFailureReasonErrorKey: errorReason,
                                                                NSLocalizedDescriptionKey: errorDescription])
                                 
-                                responseHandler?(response: message, error: error)
+                                let response = PhoenixMessage(topic: message.topic,
+                                                              event: Phoenix.replyEvent,
+                                                              payload: ["status": "error",
+                                                                        "response": ["reason": errorReason,
+                                                                                     "error": errorDescription]])
+                                
+                                responseHandler?(response: response, error: error)
                             }
                         }
                     }
