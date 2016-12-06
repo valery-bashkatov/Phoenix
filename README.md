@@ -1,21 +1,14 @@
 # Phoenix
-
-[![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
-[![Platform](https://img.shields.io/badge/platform-ios-lightgrey.svg)]()
-
-## Description
 The `Phoenix` class provides a convenient mechanism to communicate with [Phoenix Framework Channels](http://www.phoenixframework.org/docs/channels).
 
 ## Requirements
-- iOS 8.0+
-- Xcode 7.3+
+- iOS 9.0+
 
 ## Dependencies
 - [Starscream](https://github.com/daltoniam/Starscream)
 
 ## Installation
 ### Carthage
-
 To integrate `Phoenix` into your project using [Carthage](https://github.com/Carthage/Carthage), specify it in your `Cartfile`:
 
 ```
@@ -27,7 +20,6 @@ And then follow the [instructions](https://github.com/Carthage/Carthage#if-youre
 API Reference is located at [http://valery-bashkatov.github.io/Phoenix](http://valery-bashkatov.github.io/Phoenix).
 
 ## Usage
-
 ```swift
 import Phoenix
 
