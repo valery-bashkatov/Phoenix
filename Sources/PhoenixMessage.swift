@@ -9,9 +9,9 @@
 import Foundation
 
 /**
- The `PhoenixMessage` class defines the messages dispatched through the `Phoenix`.
+ The `PhoenixMessage` struct defines the messages dispatched through the `Phoenix`.
  */
-public class PhoenixMessage: NSObject {
+public struct PhoenixMessage: CustomStringConvertible, Hashable {
     
     // MARK: - Properties
 
@@ -31,12 +31,12 @@ public class PhoenixMessage: NSObject {
     private(set) var json: String
         
     /// :nodoc:
-    public override var hash: Int {
+    public var hashValue: Int {
         return ref.hash
     }
     
     /// The description of the message.
-    override public var description: String {
+    public var description: String {
         return json
     }
     
@@ -77,7 +77,7 @@ public class PhoenixMessage: NSObject {
      
      - returns: The `PhoenixMessage` instance.
      */
-    convenience init(json: String) {
+    init(json: String) {
         let jsonData = json.dataUsingEncoding(NSUTF8StringEncoding)!
         let jsonObject = try! NSJSONSerialization.JSONObjectWithData(jsonData, options: []) as! [String: AnyObject]
         
@@ -96,18 +96,14 @@ public class PhoenixMessage: NSObject {
      
      - returns: The `PhoenixMessage`.
      */
-    public convenience init(topic: String, event: String, payload: [String: AnyObject]? = nil) {
+    public init(topic: String, event: String, payload: [String: AnyObject]? = nil) {
         self.init(topic: topic, event: event, payload: payload, ref: NSUUID().UUIDString)
     }
-    
-    // MARK: - Comparison
-    
-    /// :nodoc:
-    public override func isEqual(object: AnyObject?) -> Bool {
-        guard let object = object as? PhoenixMessage else {
-            return false
-        }
-        
-        return object.ref == ref
-    }
+}
+
+// MARK: - Equatable
+
+/// :nodoc:
+public func ==(lhs: PhoenixMessage, rhs: PhoenixMessage) -> Bool {
+    return lhs.ref == rhs.ref
 }
