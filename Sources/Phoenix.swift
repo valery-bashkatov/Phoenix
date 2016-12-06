@@ -129,7 +129,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
     public init(url: String, urlParameters: [String: String]? = nil) {
         
         // Make url with parameters from components
-        let urlComponents = NSURLComponents(URL: NSURL(string: url)!, resolvingAgainstBaseURL: false)!
+        let urlComponents = NSURLComponents(string: url)!
         
         if let queryItems = urlParameters?.map({NSURLQueryItem(name: $0, value: $1)}) {
             
