@@ -12,7 +12,7 @@ The `Phoenix` class provides a convenient mechanism to communicate with [Phoenix
 To integrate `Phoenix` into your project using [Carthage](https://github.com/Carthage/Carthage), specify it in your `Cartfile`:
 
 ```
-github "valery-bashkatov/Phoenix"
+github "valery-bashkatov/Phoenix" ~> 1.0.2
 ```
 And then follow the [instructions](https://github.com/Carthage/Carthage#if-youre-building-for-ios-tvos-or-watchos) to install the framework and its dependencies.
 
@@ -23,12 +23,12 @@ API Reference is located at [http://valery-bashkatov.github.io/Phoenix](http://v
 ```swift
 import Phoenix
 
-class RadioController: NSObject, PhoenixListener {
+class RadioController: PhoenixListener {
 
     var phoenix: Phoenix
 
     override init() {
-        phoenix = Phoenix(url: NSURL(string: "ws://sample.com/websocket")!)
+        phoenix = Phoenix(url: "ws://sample.com/websocket")
         
         super.init()
 
