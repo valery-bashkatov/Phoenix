@@ -27,10 +27,8 @@ class RadioController: PhoenixListener {
 
     var phoenix: Phoenix
 
-    override init() {
+    init() {
         phoenix = Phoenix(url: "ws://sample.com/websocket")
-        
-        super.init()
 
         phoenix.connect()
         phoenix.addListener(self, forChannel: "radio", event: "new_message")
