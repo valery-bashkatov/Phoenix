@@ -19,7 +19,7 @@ And then follow the [instructions](https://github.com/Carthage/Carthage#if-youre
 ## Documentation
 API Reference is located at [http://valery-bashkatov.github.io/Phoenix](http://valery-bashkatov.github.io/Phoenix).
 
-## Usage
+## Sample
 ```swift
 import Phoenix
 

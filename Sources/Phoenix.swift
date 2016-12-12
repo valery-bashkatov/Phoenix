@@ -96,8 +96,8 @@ public class Phoenix: NSObject, WebSocketDelegate {
     /// A Boolean value that indicates a need of auto reconnections.
     public var autoReconnect = true
     
-    /// The auto reconnection delay intervals (in seconds). The first try, second, third and so on. The default value is [1, 2, 3, 4, 5, 5, 5, 5] (30 seconds in sum).
-    public var autoReconnectIntervals = Array(count: 10, repeatedValue: 3)
+    /// The auto reconnection delay intervals (in seconds). The first try, second, third and so on. The default value is [3, 3, 3, 3, 3, 3, 3, 3, 3, 3] (30 seconds in sum).
+    public var autoReconnectIntervals = [3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
     
     /// An index of the current reconnection interval in the `autoReconnectIntervals` list.
     private var autoReconnectCurrentIntervalIndex = 0
