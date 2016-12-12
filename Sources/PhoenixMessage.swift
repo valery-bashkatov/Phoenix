@@ -65,7 +65,7 @@ public struct PhoenixMessage: CustomStringConvertible, Hashable {
             "ref": ref
         ]
         
-        let jsonData = try! NSJSONSerialization.dataWithJSONObject(jsonObject, options: .PrettyPrinted)
+        let jsonData = try! NSJSONSerialization.dataWithJSONObject(jsonObject, options: [])
         
         self.json = String(data: jsonData, encoding: NSUTF8StringEncoding)!
     }

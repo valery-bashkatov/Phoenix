@@ -84,20 +84,20 @@ public class Phoenix: NSObject, WebSocketDelegate {
     private var sendingBuffer: [PhoenixMessage: (responseTimeoutTimer: dispatch_source_t,
                                                  responseHandler: ((response: PhoenixMessage, error: NSError?) -> Void)?)] = [:]
     
-    /// The response timeout (in seconds).
-    public var responseTimeout = 5
+    /// The response timeout (in seconds). The default value is 10 seconds.
+    public var responseTimeout = 10
     
     /// The heartbeat timer.
     private var heartbeatTimer = NSTimer()
     
-    /// The heartbeat interval (in seconds).
+    /// The heartbeat interval (in seconds). The default value is 20 seconds.
     public var heartbeatInterval = 20
     
     /// A Boolean value that indicates a need of auto reconnections.
     public var autoReconnect = true
     
-    /// The auto reconnection delay intervals (in seconds). The first try, second, third and so on.
-    public var autoReconnectIntervals = [1, 2, 3, 4, 5]
+    /// The auto reconnection delay intervals (in seconds). The first try, second, third and so on. The default value is [1, 2, 3, 4, 5, 5, 5, 5] (30 seconds in sum).
+    public var autoReconnectIntervals = Array(count: 10, repeatedValue: 3)
     
     /// An index of the current reconnection interval in the `autoReconnectIntervals` list.
     private var autoReconnectCurrentIntervalIndex = 0
@@ -186,7 +186,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
      
      - parameter topic: The channel topic.
      */
-    private func join(topic: String) {
+    public func join(topic: String) {
         var needSendJoinMessage = false
         
         // If channel is not yet joined and joining is not started
@@ -299,7 +299,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
                             dispatch_async(self.responseQueue) {
                                 
                                 let errorReason = "Response timeout expired."
-                                let errorDescription = "Message failed to send: response timeout expired."
+                                let errorDescription = "PhoenixMessage failed to send: response timeout expired."
                                 
                                 let error = NSError(domain: "phoenix.message.error",
                                                     code: 2,
@@ -366,7 +366,7 @@ public class Phoenix: NSObject, WebSocketDelegate {
                                           responseMessage.payload?["response"]?["error"] as? String
                                           ?? ""
                         
-                        let errorDescription = "Message failed to send: \(errorReason)"
+                        let errorDescription = "PhoenixMessage failed to send: \(errorReason)"
                         
                         let error = NSError(domain: "phoenix.message.error",
                                             code: 0,
