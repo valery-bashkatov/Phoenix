@@ -17,14 +17,14 @@ public protocol PhoenixListener: class {
      - parameter phoenix: The `Phoenix` object that triggered the event.
      - parameter message: The received message.
      */
-    func phoenix(phoenix: Phoenix, didReceive message: PhoenixMessage)
+    func phoenix(_ phoenix: Phoenix, didReceive message: PhoenixMessage)
     
     /**
      Called when `Phoenix` connected.
      
      - parameter phoenix: The `Phoenix` object that triggered the event.
      */
-    func phoenixDidConnect(phoenix: Phoenix)
+    func phoenixDidConnect(_ phoenix: Phoenix)
     
     /**
      Called when `Phoenix` disconnected.
@@ -32,7 +32,7 @@ public protocol PhoenixListener: class {
      - parameter phoenix: The `Phoenix` object that triggered the event.
      - parameter error: An error object with the cause.
      */
-    func phoenixDidDisconnect(phoenix: Phoenix, error: NSError?)
+    func phoenixDidDisconnect(_ phoenix: Phoenix, error: Error?)
 
     /**
      Called when the channel joined.
@@ -40,7 +40,7 @@ public protocol PhoenixListener: class {
      - parameter phoenix: The `Phoenix` object that triggered the event.
      - parameter topic: The channel's topic.
      */
-    func phoenix(phoenix: Phoenix, didJoin topic: String)
+    func phoenix(_ phoenix: Phoenix, didJoin topic: String)
     
     /**
      Called when the channel closed.
@@ -49,5 +49,5 @@ public protocol PhoenixListener: class {
      - parameter topic: The channel's topic.
      - parameter error: An error object with the cause.
      */
-    func phoenix(phoenix: Phoenix, didClose topic: String, error: NSError?)
+    func phoenix(_ phoenix: Phoenix, didClose topic: String, error: Error?)
 }

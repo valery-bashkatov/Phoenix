@@ -3,6 +3,7 @@ The `Phoenix` class provides a convenient mechanism to communicate with [Phoenix
 
 ## Requirements
 - iOS 9.0+
+- Swift 4.1+
 
 ## Dependencies
 - [Starscream](https://github.com/daltoniam/Starscream)
@@ -12,7 +13,7 @@ The `Phoenix` class provides a convenient mechanism to communicate with [Phoenix
 To integrate `Phoenix` into your project using [Carthage](https://github.com/Carthage/Carthage), specify it in your `Cartfile`:
 
 ```
-github "valery-bashkatov/Phoenix" ~> 1.0.2
+github "valery-bashkatov/Phoenix" ~> 2.0.0
 ```
 And then follow the [instructions](https://github.com/Carthage/Carthage#if-youre-building-for-ios-tvos-or-watchos) to install the framework and its dependencies.
 

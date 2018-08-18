@@ -59,15 +59,15 @@ public struct PhoenixMessage: CustomStringConvertible, Hashable {
         self.ref = ref
         
         let jsonObject: [String: AnyObject] = [
-            "topic": topic,
-            "event": event,
-            "payload": payload ?? NSNull(),
-            "ref": ref
+            "topic": topic as AnyObject,
+            "event": event as AnyObject,
+            "payload": (payload as AnyObject?) ?? NSNull(),
+            "ref": ref as AnyObject
         ]
         
-        let jsonData = try! NSJSONSerialization.dataWithJSONObject(jsonObject, options: [])
+        let jsonData = try! JSONSerialization.data(withJSONObject: jsonObject, options: [])
         
-        self.json = String(data: jsonData, encoding: NSUTF8StringEncoding)!
+        self.json = String(data: jsonData, encoding: String.Encoding.utf8)!
     }
     
     /**
@@ -78,13 +78,13 @@ public struct PhoenixMessage: CustomStringConvertible, Hashable {
      - returns: The `PhoenixMessage` instance.
      */
     init(json: String) {
-        let jsonData = json.dataUsingEncoding(NSUTF8StringEncoding)!
-        let jsonObject = try! NSJSONSerialization.JSONObjectWithData(jsonData, options: []) as! [String: AnyObject]
+        let jsonData = json.data(using: String.Encoding.utf8)!
+        let jsonObject = try! JSONSerialization.jsonObject(with: jsonData, options: []) as! [String: AnyObject]
         
         self.init(topic: jsonObject["topic"] as! String,
                   event: jsonObject["event"] as! String,
                   payload: jsonObject["payload"] as? [String: AnyObject],
-                  ref: jsonObject["ref"] as? String ?? NSUUID().UUIDString)
+                  ref: jsonObject["ref"] as? String ?? NSUUID().uuidString)
     }
     
     /**
@@ -97,7 +97,7 @@ public struct PhoenixMessage: CustomStringConvertible, Hashable {
      - returns: The `PhoenixMessage`.
      */
     public init(topic: String, event: String, payload: [String: AnyObject]? = nil) {
-        self.init(topic: topic, event: event, payload: payload, ref: NSUUID().UUIDString)
+        self.init(topic: topic, event: event, payload: payload, ref: NSUUID().uuidString)
     }
 }
 
