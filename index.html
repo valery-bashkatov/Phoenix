@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Phoenix  Reference</title>
+    <link rel="stylesheet" type="text/css" href="css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="css/highlight.css" />
+    <meta charset="utf-8">
+    <script src="js/jquery.min.js" defer></script>
+    <script src="js/jazzy.js" defer></script>
+    
+    <script src="js/lunr.min.js" defer></script>
+    <script src="js/typeahead.jquery.js" defer></script>
+    <script src="js/jazzy.search.js" defer></script>
+  </head>
+  <body>
+
+
+    <a title="Phoenix  Reference"></a>
+
+    <header class="header">
+      <p class="header-col header-col--primary">
+        <a class="header-link" href="index.html">
+          Phoenix Docs
+        </a>
+         (100% documented)
+      </p>
+    
+      <p class="header-col--secondary">
+        <form role="search" action="search.json">
+          <input type="text" placeholder="Search documentation" data-typeahead>
+        </form>
+      </p>
+    
+        <p class="header-col header-col--secondary">
+          <a class="header-link" href="https://github.com/valery-bashkatov/Phoenix">
+            <img class="header-icon" src="img/gh.png"/>
+            View on GitHub
+          </a>
+        </p>
+    
+    </header>
+
+    <p class="breadcrumbs">
+      <a class="breadcrumb" href="index.html">Phoenix Reference</a>
+      <img class="carat" src="img/carat.png" />
+      Phoenix  Reference
+    </p>
+
+    <div class="content-wrapper">
+      <nav class="navigation">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Classes/Phoenix.html">Phoenix</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Protocols/PhoenixListener.html">PhoenixListener</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="Structs.html">Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Structs/PhoenixMessage.html">PhoenixMessage</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+
+        <section class="section">
+          <div class="section-content">
+            
+            <h1 id='phoenix' class='heading'>Phoenix</h1>
+
+<p>The <code><a href="Classes/Phoenix.html">Phoenix</a></code> class provides a convenient mechanism to communicate with <a href="http://www.phoenixframework.org/docs/channels">Phoenix Framework Channels</a>.</p>
+<h2 id='requirements' class='heading'>Requirements</h2>
+
+<ul>
+<li>iOS 9.0+</li>
+<li>Swift 4.1+</li>
+</ul>
+<h2 id='dependencies' class='heading'>Dependencies</h2>
+
+<ul>
+<li><a href="https://github.com/daltoniam/Starscream">Starscream</a></li>
+</ul>
+<h2 id='installation' class='heading'>Installation</h2>
+<h3 id='carthage' class='heading'>Carthage</h3>
+
+<p>To integrate <code><a href="Classes/Phoenix.html">Phoenix</a></code> into your project using <a href="https://github.com/Carthage/Carthage">Carthage</a>, specify it in your <code>Cartfile</code>:</p>
+<pre class="highlight plaintext"><code>github "valery-bashkatov/Phoenix" ~&gt; 2.0.0
+</code></pre>
+
+<p>And then follow the <a href="https://github.com/Carthage/Carthage#if-youre-building-for-ios-tvos-or-watchos">instructions</a> to install the framework and its dependencies.</p>
+<h2 id='documentation' class='heading'>Documentation</h2>
+
+<p>API Reference is located at <a href="http://valery-bashkatov.github.io/Phoenix">http://valery-bashkatov.github.io/Phoenix</a>.</p>
+<h2 id='sample' class='heading'>Sample</h2>
+<pre class="highlight swift"><code><span class="kd">import</span> <span class="kt">Phoenix</span>
+
+<span class="kd">class</span> <span class="kt">RadioController</span><span class="p">:</span> <span class="kt">PhoenixListener</span> <span class="p">{</span>
+
+    <span class="k">var</span> <span class="nv">phoenix</span><span class="p">:</span> <span class="kt">Phoenix</span>
+
+    <span class="nf">init</span><span class="p">()</span> <span class="p">{</span>
+        <span class="n">phoenix</span> <span class="o">=</span> <span class="kt">Phoenix</span><span class="p">(</span><span class="nv">url</span><span class="p">:</span> <span class="s">"ws://sample.com/websocket"</span><span class="p">)</span>
+
+        <span class="n">phoenix</span><span class="o">.</span><span class="nf">connect</span><span class="p">()</span>
+        <span class="n">phoenix</span><span class="o">.</span><span class="nf">addListener</span><span class="p">(</span><span class="k">self</span><span class="p">,</span> <span class="nv">forChannel</span><span class="p">:</span> <span class="s">"radio"</span><span class="p">,</span> <span class="nv">event</span><span class="p">:</span> <span class="s">"new_message"</span><span class="p">)</span>
+
+        <span class="k">let</span> <span class="nv">message</span> <span class="o">=</span> <span class="kt">PhoenixMessage</span><span class="p">(</span><span class="nv">topic</span><span class="p">:</span> <span class="s">"radio"</span><span class="p">,</span> <span class="nv">event</span><span class="p">:</span> <span class="s">"ping"</span><span class="p">)</span>
+
+        <span class="n">phoenix</span><span class="o">.</span><span class="nf">send</span><span class="p">(</span><span class="n">message</span><span class="p">)</span> <span class="p">{</span>
+            <span class="p">(</span><span class="nv">message</span><span class="p">:</span> <span class="kt">PhoenixMessage</span><span class="p">,</span> <span class="nv">error</span><span class="p">:</span> <span class="kt">NSError</span><span class="p">?)</span> <span class="k">in</span>
+
+            <span class="k">guard</span> <span class="n">error</span> <span class="o">==</span> <span class="kc">nil</span> <span class="k">else</span> <span class="p">{</span>
+                <span class="nf">print</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+                <span class="k">return</span>
+            <span class="p">}</span>
+
+            <span class="nf">print</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+            <span class="nf">print</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">response</span><span class="o">!.</span><span class="n">payload</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="kd">func</span> <span class="nf">phoenix</span><span class="p">(</span><span class="nv">phoenix</span><span class="p">:</span> <span class="kt">Phoenix</span><span class="p">,</span> <span class="n">didReceive</span> <span class="nv">message</span><span class="p">:</span> <span class="kt">PhoenixMessage</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">print</span><span class="p">(</span><span class="s">"Received message: </span><span class="se">\(</span><span class="n">message</span><span class="se">)</span><span class="s">"</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="kd">func</span> <span class="nf">phoenix</span><span class="p">(</span><span class="nv">phoenix</span><span class="p">:</span> <span class="kt">Phoenix</span><span class="p">,</span> <span class="n">didJoin</span> <span class="nv">topic</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">print</span><span class="p">(</span><span class="s">"Channel </span><span class="se">\(</span><span class="n">topic</span><span class="se">)</span><span class="s"> joined"</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="kd">func</span> <span class="nf">phoenix</span><span class="p">(</span><span class="nv">phoenix</span><span class="p">:</span> <span class="kt">Phoenix</span><span class="p">,</span> <span class="n">didClose</span> <span class="nv">topic</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">error</span><span class="p">:</span> <span class="kt">NSError</span><span class="p">?)</span> <span class="p">{</span>
+        <span class="nf">print</span><span class="p">(</span><span class="s">"Channel </span><span class="se">\(</span><span class="n">topic</span><span class="se">)</span><span class="s"> closed with error: </span><span class="se">\(</span><span class="n">error</span><span class="se">)</span><span class="s">"</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="kd">func</span> <span class="nf">phoenixDidConnect</span><span class="p">(</span><span class="nv">phoenix</span><span class="p">:</span> <span class="kt">Phoenix</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">print</span><span class="p">(</span><span class="s">"Phoenix connected"</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="kd">func</span> <span class="nf">phoenixDidDisconnect</span><span class="p">(</span><span class="nv">phoenix</span><span class="p">:</span> <span class="kt">Phoenix</span><span class="p">,</span> <span class="nv">error</span><span class="p">:</span> <span class="kt">NSError</span><span class="p">?)</span> <span class="p">{</span>
+        <span class="nf">print</span><span class="p">(</span><span class="s">"Phoenix disconnected"</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+
+          </div>
+        </section>
+
+
+      </article>
+    </div>
+    <section class="footer">
+      <p>&copy; 2018 <a class="link" href="http://valery.bashkatov.org" target="_blank" rel="external">Valery Bashkatov</a>. All rights reserved. (Last updated: 2018-08-19)</p>
+      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.3</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+    </section>
+  </body>
+</div>
+</html>

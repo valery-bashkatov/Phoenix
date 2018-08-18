@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>PhoenixListener Protocol Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset="utf-8">
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+    <script src="../js/lunr.min.js" defer></script>
+    <script src="../js/typeahead.jquery.js" defer></script>
+    <script src="../js/jazzy.search.js" defer></script>
+  </head>
+  <body>
+
+    <a name="//apple_ref/swift/Protocol/PhoenixListener" class="dashAnchor"></a>
+
+    <a title="PhoenixListener Protocol Reference"></a>
+
+    <header class="header">
+      <p class="header-col header-col--primary">
+        <a class="header-link" href="../index.html">
+          Phoenix Docs
+        </a>
+         (100% documented)
+      </p>
+    
+      <p class="header-col--secondary">
+        <form role="search" action="../search.json">
+          <input type="text" placeholder="Search documentation" data-typeahead>
+        </form>
+      </p>
+    
+        <p class="header-col header-col--secondary">
+          <a class="header-link" href="https://github.com/valery-bashkatov/Phoenix">
+            <img class="header-icon" src="../img/gh.png"/>
+            View on GitHub
+          </a>
+        </p>
+    
+    </header>
+
+    <p class="breadcrumbs">
+      <a class="breadcrumb" href="../index.html">Phoenix Reference</a>
+      <img class="carat" src="../img/carat.png" />
+      PhoenixListener Protocol Reference
+    </p>
+
+    <div class="content-wrapper">
+      <nav class="navigation">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/Phoenix.html">Phoenix</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Protocols/PhoenixListener.html">PhoenixListener</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Structs.html">Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/PhoenixMessage.html">PhoenixMessage</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+
+        <section class="section">
+          <div class="section-content">
+            <h1>PhoenixListener</h1>
+              <div class="declaration">
+                <div class="language">
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">protocol</span> <span class="kt">PhoenixListener</span> <span class="p">:</span> <span class="kt">AnyObject</span></code></pre>
+
+                </div>
+              </div>
+            <p>The <code>PhoenixListener</code> protocol describes methods of the <code><a href="../Classes/Phoenix.html">Phoenix</a></code>&lsquo;s listeners.</p>
+
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-content">
+            <div class="task-group">
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7Phoenix0A8ListenerP7phoenixyA2AC_AA0A7MessageV10didReceivetF"></a>
+                    <a name="//apple_ref/swift/Method/phoenix(_:didReceive:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7Phoenix0A8ListenerP7phoenixyA2AC_AA0A7MessageV10didReceivetF">phoenix(_:didReceive:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Called when a message is received.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">phoenix</span><span class="p">(</span><span class="n">_</span> <span class="nv">phoenix</span><span class="p">:</span> <span class="kt"><a href="../Classes/Phoenix.html">Phoenix</a></span><span class="p">,</span> <span class="n">didReceive</span> <span class="nv">message</span><span class="p">:</span> <span class="kt"><a href="../Structs/PhoenixMessage.html">PhoenixMessage</a></span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>phoenix</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code><a href="../Classes/Phoenix.html">Phoenix</a></code> object that triggered the event.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>message</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The received message.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7Phoenix0A8ListenerP17phoenixDidConnectyA2ACF"></a>
+                    <a name="//apple_ref/swift/Method/phoenixDidConnect(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7Phoenix0A8ListenerP17phoenixDidConnectyA2ACF">phoenixDidConnect(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Called when <code><a href="../Classes/Phoenix.html">Phoenix</a></code> connected.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">phoenixDidConnect</span><span class="p">(</span><span class="n">_</span> <span class="nv">phoenix</span><span class="p">:</span> <span class="kt"><a href="../Classes/Phoenix.html">Phoenix</a></span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>phoenix</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code><a href="../Classes/Phoenix.html">Phoenix</a></code> object that triggered the event.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7Phoenix0A8ListenerP20phoenixDidDisconnectyA2AC_s5Error_pSg5errortF"></a>
+                    <a name="//apple_ref/swift/Method/phoenixDidDisconnect(_:error:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7Phoenix0A8ListenerP20phoenixDidDisconnectyA2AC_s5Error_pSg5errortF">phoenixDidDisconnect(_:error:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Called when <code><a href="../Classes/Phoenix.html">Phoenix</a></code> disconnected.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">phoenixDidDisconnect</span><span class="p">(</span><span class="n">_</span> <span class="nv">phoenix</span><span class="p">:</span> <span class="kt"><a href="../Classes/Phoenix.html">Phoenix</a></span><span class="p">,</span> <span class="nv">error</span><span class="p">:</span> <span class="kt">Error</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>phoenix</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code><a href="../Classes/Phoenix.html">Phoenix</a></code> object that triggered the event.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>error</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An error object with the cause.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7Phoenix0A8ListenerP7phoenixyA2AC_SS7didJointF"></a>
+                    <a name="//apple_ref/swift/Method/phoenix(_:didJoin:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7Phoenix0A8ListenerP7phoenixyA2AC_SS7didJointF">phoenix(_:didJoin:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Called when the channel joined.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">phoenix</span><span class="p">(</span><span class="n">_</span> <span class="nv">phoenix</span><span class="p">:</span> <span class="kt"><a href="../Classes/Phoenix.html">Phoenix</a></span><span class="p">,</span> <span class="n">didJoin</span> <span class="nv">topic</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>phoenix</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code><a href="../Classes/Phoenix.html">Phoenix</a></code> object that triggered the event.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>topic</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The channel&rsquo;s topic.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7Phoenix0A8ListenerP7phoenixyA2AC_SS8didCloses5Error_pSg5errortF"></a>
+                    <a name="//apple_ref/swift/Method/phoenix(_:didClose:error:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7Phoenix0A8ListenerP7phoenixyA2AC_SS8didCloses5Error_pSg5errortF">phoenix(_:didClose:error:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Called when the channel closed.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">phoenix</span><span class="p">(</span><span class="n">_</span> <span class="nv">phoenix</span><span class="p">:</span> <span class="kt"><a href="../Classes/Phoenix.html">Phoenix</a></span><span class="p">,</span> <span class="n">didClose</span> <span class="nv">topic</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">error</span><span class="p">:</span> <span class="kt">Error</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>phoenix</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code><a href="../Classes/Phoenix.html">Phoenix</a></code> object that triggered the event.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>topic</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The channel&rsquo;s topic.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>error</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An error object with the cause.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+      </article>
+    </div>
+    <section class="footer">
+      <p>&copy; 2018 <a class="link" href="http://valery.bashkatov.org" target="_blank" rel="external">Valery Bashkatov</a>. All rights reserved. (Last updated: 2018-08-19)</p>
+      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.3</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+    </section>
+  </body>
+</div>
+</html>

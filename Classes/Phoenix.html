@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Phoenix Class Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset="utf-8">
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+    <script src="../js/lunr.min.js" defer></script>
+    <script src="../js/typeahead.jquery.js" defer></script>
+    <script src="../js/jazzy.search.js" defer></script>
+  </head>
+  <body>
+
+    <a name="//apple_ref/swift/Class/Phoenix" class="dashAnchor"></a>
+
+    <a title="Phoenix Class Reference"></a>
+
+    <header class="header">
+      <p class="header-col header-col--primary">
+        <a class="header-link" href="../index.html">
+          Phoenix Docs
+        </a>
+         (100% documented)
+      </p>
+    
+      <p class="header-col--secondary">
+        <form role="search" action="../search.json">
+          <input type="text" placeholder="Search documentation" data-typeahead>
+        </form>
+      </p>
+    
+        <p class="header-col header-col--secondary">
+          <a class="header-link" href="https://github.com/valery-bashkatov/Phoenix">
+            <img class="header-icon" src="../img/gh.png"/>
+            View on GitHub
+          </a>
+        </p>
+    
+    </header>
+
+    <p class="breadcrumbs">
+      <a class="breadcrumb" href="../index.html">Phoenix Reference</a>
+      <img class="carat" src="../img/carat.png" />
+      Phoenix Class Reference
+    </p>
+
+    <div class="content-wrapper">
+      <nav class="navigation">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/Phoenix.html">Phoenix</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Protocols/PhoenixListener.html">PhoenixListener</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Structs.html">Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/PhoenixMessage.html">PhoenixMessage</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+
+        <section class="section">
+          <div class="section-content">
+            <h1>Phoenix</h1>
+              <div class="declaration">
+                <div class="language">
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">Phoenix</span> <span class="p">:</span> <span class="kt">NSObject</span><span class="p">,</span> <span class="kt">WebSocketDelegate</span></code></pre>
+
+                </div>
+              </div>
+            <p>The <code>Phoenix</code> class provides a convenient mechanism to communicate with <a href="http://www.phoenixframework.org/docs/channels">Phoenix Framework Channels</a>.</p>
+<div class="aside aside-seealso">
+    <p class="aside-title">Seealso</p>
+    <a href="http://www.phoenixframework.org/docs/overview">Phoenix Framework Overview</a>
+
+</div>
+
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-content">
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Properties"></a>
+                <a name="//apple_ref/swift/Section/Properties" class="dashAnchor"></a>
+                <a href="#/Properties">
+                  <h3 class="section-name">Properties</h3>
+                </a>
+              </div>
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7PhoenixAAC3urlSSvp"></a>
+                    <a name="//apple_ref/swift/Property/url" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7PhoenixAAC3urlSSvp">url</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The WebSocket URL.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">url</span><span class="p">:</span> <span class="kt">String</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7PhoenixAAC13urlParameterss10DictionaryVyS2SGSgvp"></a>
+                    <a name="//apple_ref/swift/Property/urlParameters" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7PhoenixAAC13urlParameterss10DictionaryVyS2SGSgvp">urlParameters</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The parameters, that will be added into the URL.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">urlParameters</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span> <span class="p">:</span> <span class="kt">String</span><span class="p">]?</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7PhoenixAAC15responseTimeoutSivp"></a>
+                    <a name="//apple_ref/swift/Property/responseTimeout" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7PhoenixAAC15responseTimeoutSivp">responseTimeout</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The response timeout (in seconds). The default value is 10 seconds.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">responseTimeout</span><span class="p">:</span> <span class="kt">Int</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7PhoenixAAC17heartbeatIntervalSivp"></a>
+                    <a name="//apple_ref/swift/Property/heartbeatInterval" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7PhoenixAAC17heartbeatIntervalSivp">heartbeatInterval</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The heartbeat interval (in seconds). The default value is 20 seconds.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">heartbeatInterval</span><span class="p">:</span> <span class="kt">Int</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7PhoenixAAC13autoReconnectSbvp"></a>
+                    <a name="//apple_ref/swift/Property/autoReconnect" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7PhoenixAAC13autoReconnectSbvp">autoReconnect</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A Boolean value that indicates a need of auto reconnections.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">autoReconnect</span><span class="p">:</span> <span class="kt">Bool</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7PhoenixAAC22autoReconnectIntervalsSaySiGvp"></a>
+                    <a name="//apple_ref/swift/Property/autoReconnectIntervals" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7PhoenixAAC22autoReconnectIntervalsSaySiGvp">autoReconnectIntervals</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The auto reconnection delay intervals (in seconds). The first try, second, third and so on. The default value is <a href="30%20seconds%20in%20sum">3, 3, 3, 3, 3, 3, 3, 3, 3, 3</a>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">autoReconnectIntervals</span><span class="p">:</span> <span class="p">[</span><span class="kt">Int</span><span class="p">]</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7PhoenixAAC11isConnectedSbvp"></a>
+                    <a name="//apple_ref/swift/Property/isConnected" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7PhoenixAAC11isConnectedSbvp">isConnected</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A Boolean value that indicates a connection status.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">isConnected</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7PhoenixAAC13listenerQueueSo08DispatchC0Cvp"></a>
+                    <a name="//apple_ref/swift/Property/listenerQueue" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7PhoenixAAC13listenerQueueSo08DispatchC0Cvp">listenerQueue</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The queue will be used to call listeners methods.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">listenerQueue</span><span class="p">:</span> <span class="kt">DispatchQueue</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7PhoenixAAC13responseQueueSo08DispatchC0Cvp"></a>
+                    <a name="//apple_ref/swift/Property/responseQueue" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7PhoenixAAC13responseQueueSo08DispatchC0Cvp">responseQueue</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The queue will be used to call send&rsquo;s responses.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">responseQueue</span><span class="p">:</span> <span class="kt">DispatchQueue</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Initialization"></a>
+                <a name="//apple_ref/swift/Section/Initialization" class="dashAnchor"></a>
+                <a href="#/Initialization">
+                  <h3 class="section-name">Initialization</h3>
+                </a>
+              </div>
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7PhoenixAACABSS3url_s10DictionaryVyS2SGSg0B10Parameterstcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(url:urlParameters:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7PhoenixAACABSS3url_s10DictionaryVyS2SGSg0B10Parameterstcfc">init(url:urlParameters:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates the <code>Phoenix</code> object.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">url</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">urlParameters</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">:</span> <span class="kt">String</span><span class="p">]?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>url</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The URL of the WebSocket.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>urlParameters</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The parameters, that will be URL encoded and added into the URL.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>The <code>Phoenix</code> instance.</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Connection"></a>
+                <a name="//apple_ref/swift/Section/Connection" class="dashAnchor"></a>
+                <a href="#/Connection">
+                  <h3 class="section-name">Connection</h3>
+                </a>
+              </div>
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:@M@Phoenix@objc(cs)Phoenix(im)connect"></a>
+                    <a name="//apple_ref/swift/Method/connect()" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@M@Phoenix@objc(cs)Phoenix(im)connect">connect()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Connects <code>Phoenix</code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@objc</span>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">connect</span><span class="p">()</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7PhoenixAAC10disconnectyyF"></a>
+                    <a name="//apple_ref/swift/Method/disconnect()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7PhoenixAAC10disconnectyyF">disconnect()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Disconnects <code>Phoenix</code>. If <code><a href="../Classes/Phoenix.html#/s:7PhoenixAAC13autoReconnectSbvp">autoReconnect</a></code> is true, it will be set to false.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">disconnect</span><span class="p">()</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Channels%20Management"></a>
+                <a name="//apple_ref/swift/Section/Channels Management" class="dashAnchor"></a>
+                <a href="#/Channels%20Management">
+                  <h3 class="section-name">Channels Management</h3>
+                </a>
+              </div>
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7PhoenixAAC4joinySS5topic_tF"></a>
+                    <a name="//apple_ref/swift/Method/join(topic:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7PhoenixAAC4joinySS5topic_tF">join(topic:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Joins the channel with specified topic.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">join</span><span class="p">(</span><span class="nv">topic</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>topic</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The channel topic.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Sending%20Messages"></a>
+                <a name="//apple_ref/swift/Section/Sending Messages" class="dashAnchor"></a>
+                <a href="#/Sending%20Messages">
+                  <h3 class="section-name">Sending Messages</h3>
+                </a>
+              </div>
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7PhoenixAAC4sendyAA0A7MessageV_yAE_s5Error_pSgtcSg15responseHandlertF"></a>
+                    <a name="//apple_ref/swift/Method/send(_:responseHandler:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7PhoenixAAC4sendyAA0A7MessageV_yAE_s5Error_pSgtcSg15responseHandlertF">send(_:responseHandler:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Adds a message to the sending queue.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">send</span><span class="p">(</span><span class="n">_</span> <span class="nv">message</span><span class="p">:</span> <span class="kt"><a href="../Structs/PhoenixMessage.html">PhoenixMessage</a></span><span class="p">,</span>
+                 <span class="nv">responseHandler</span><span class="p">:</span> <span class="p">((</span><span class="n">_</span> <span class="nv">response</span><span class="p">:</span> <span class="kt"><a href="../Structs/PhoenixMessage.html">PhoenixMessage</a></span><span class="p">,</span> <span class="n">_</span> <span class="nv">error</span><span class="p">:</span> <span class="kt">Error</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>message</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The message to send.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>responseHandler</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The closure, which is called after message sending and receiving a response from the server. It will be executed in the <code><a href="../Classes/Phoenix.html#/s:7PhoenixAAC13listenerQueueSo08DispatchC0Cvp">listenerQueue</a></code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Adding%20and%20Removing%20Listeners"></a>
+                <a name="//apple_ref/swift/Section/Adding and Removing Listeners" class="dashAnchor"></a>
+                <a href="#/Adding%20and%20Removing%20Listeners">
+                  <h3 class="section-name">Adding and Removing Listeners</h3>
+                </a>
+              </div>
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7PhoenixAAC11addListeneryAA0aC0_p8listener_SS10forChannelSSSg5eventtF"></a>
+                    <a name="//apple_ref/swift/Method/addListener(listener:forChannel:event:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7PhoenixAAC11addListeneryAA0aC0_p8listener_SS10forChannelSSSg5eventtF">addListener(listener:forChannel:event:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Adds a listener object for the specified channel topic and event. Listener methods will be executed in the <code><a href="../Classes/Phoenix.html#/s:7PhoenixAAC13listenerQueueSo08DispatchC0Cvp">listenerQueue</a></code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">addListener</span><span class="p">(</span><span class="nv">listener</span><span class="p">:</span> <span class="kt"><a href="../Protocols/PhoenixListener.html">PhoenixListener</a></span><span class="p">,</span> <span class="n">forChannel</span> <span class="nv">topic</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">event</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>listener</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The listener.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>topic</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The channel topic.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>event</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The event name. If is <code>nil</code>, then all events of the channel.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7PhoenixAAC14removeListeneryAA0aC0_p8listener_SS10forChannelSSSg5eventtF"></a>
+                    <a name="//apple_ref/swift/Method/removeListener(listener:forChannel:event:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7PhoenixAAC14removeListeneryAA0aC0_p8listener_SS10forChannelSSSg5eventtF">removeListener(listener:forChannel:event:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Removes the listener object for the specified channel topic and event.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">removeListener</span><span class="p">(</span><span class="nv">listener</span><span class="p">:</span> <span class="kt"><a href="../Protocols/PhoenixListener.html">PhoenixListener</a></span><span class="p">,</span> <span class="n">forChannel</span> <span class="nv">topic</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">event</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>listener</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The listener.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>topic</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The channel topic.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>event</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The event name; <code>nil</code> means all events of the channel.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+      </article>
+    </div>
+    <section class="footer">
+      <p>&copy; 2018 <a class="link" href="http://valery.bashkatov.org" target="_blank" rel="external">Valery Bashkatov</a>. All rights reserved. (Last updated: 2018-08-19)</p>
+      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.3</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+    </section>
+  </body>
+</div>
+</html>
